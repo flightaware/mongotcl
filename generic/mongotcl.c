@@ -445,7 +445,6 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	"create_index",
         "set_op_timeout",
         "client",
-        "destroy",
         "reconnect",
         "check_connection",
         "replica_set_init",
@@ -467,7 +466,6 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_CREATE_INDEX,
         OPT_SET_OP_TIMEOUT,
         OPT_CLIENT,
-        OPT_DESTROY,
 	OPT_RECONNECT,
 	OPT_CHECK_CONNECTION,
         OPT_REPLICA_SET_INIT,
@@ -567,17 +565,6 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	if (mongo_client (md->conn, address, port) != MONGO_OK) {
 	    return mongotcl_setMongoError (interp, md->conn);
 	}
-        break;
-      }
-
-      // NB OPT_DESTROY this is probably not needed and a bad idea
-      case OPT_DESTROY: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "destroy");
-	    return TCL_ERROR;
-	}
-
-	mongo_destroy (md->conn);
         break;
       }
 
