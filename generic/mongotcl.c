@@ -81,7 +81,7 @@ mongotcl_setBsonError (Tcl_Interp *interp, bson *bson) {
  *----------------------------------------------------------------------
  */
 static int
-mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *bson) {
+mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson **bson) {
     Tcl_CmdInfo	cmdInfo;
 
     if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
@@ -93,7 +93,7 @@ mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *bs
 	return TCL_ERROR;
     }
 
-    bson = ((mongotcl_bsonClientData *)cmdInfo.objClientData)->bson;
+    *bson = ((mongotcl_bsonClientData *)cmdInfo.objClientData)->bson;
     return TCL_OK;
 }
 
@@ -584,7 +584,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    return TCL_ERROR;
 	}
 
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], bson) == TCL_ERROR) {
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
 	    return TCL_ERROR;
 	}
 
@@ -596,6 +596,63 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
       }
 
       case OPT_UPDATE: {
+	bson *condBson;
+	bson *opBson;
+	int   suboptIndex;
+	int   updateType;
+
+	static CONST char *subOptions[] = {
+	    "basic",
+	    "multi",
+	    "upsert",
+	    NULL
+	};
+
+	enum suboptions {
+	    SUBOPT_UPDATE_BASIC,
+	    SUBOPT_UPDATE_MULTI,
+	    SUBOPT_UPDATE_UPSERT
+	};
+
+	if (objc < 5 || objc > 6) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace condBson opBson ?updateType?");
+	    return TCL_ERROR;
+	}
+
+	if (objc == 5) {
+	    suboptIndex = SUBOPT_UPDATE_BASIC;
+	} else {
+	    if (Tcl_GetIndexFromObj (interp, objv[5], subOptions, "updateType", TCL_EXACT, &suboptIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &condBson) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[4], &opBson) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	switch ((enum suboptions)suboptIndex) {
+	    case SUBOPT_UPDATE_BASIC:
+		updateType = MONGO_UPDATE_BASIC;
+		break;
+
+	    case SUBOPT_UPDATE_MULTI:
+		updateType = MONGO_UPDATE_MULTI;
+		break;
+
+	    case SUBOPT_UPDATE_UPSERT:
+		updateType = MONGO_UPDATE_UPSERT;
+		break;
+	}
+
+	if (mongo_update (md->conn, Tcl_GetString(objv[2]), condBson, opBson, updateType, 0) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
 	break;
       }
 
@@ -619,7 +676,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	bsonList = (bson **)ckalloc (sizeof (bson *) * listObjc);
 
 	for (i = 0; i < listObjc; i++) {
-	    if (mongotcl_cmdNameObjToBson (interp, listObjv[i], bsonList[i]) == TCL_ERROR) {
+	    if (mongotcl_cmdNameObjToBson (interp, listObjv[i], &bsonList[i]) == TCL_ERROR) {
 		return TCL_ERROR;
 	    }
 	}
