@@ -1,0 +1,7 @@
+#
+# mongotcl configure for FreeBSD
+#
+
+autoconf
+./configure --with-tcl=/usr/local/lib/tcl8.5  --mandir=/usr/local/man --enable-symbols
+
