@@ -126,6 +126,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	"finish_object",
 	"new_oid",
 	"finish",
+	"print",
         NULL
     };
 
@@ -138,7 +139,8 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_APPEND_START_OBJECT,
         OPT_APPEND_FINISH_OBJECT,
 	OPT_APPEND_NEW_OID,
-        OPT_FINISH
+        OPT_FINISH,
+	OPT_PRINT
     };
 
     /* basic validation of command line arguments */
@@ -262,6 +264,16 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	if (bson_append_finish_object (bd->bson) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
+        break;
+      }
+
+      case OPT_PRINT: {
+	if (objc != 2) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "print");
+	    return TCL_ERROR;
+	}
+
+	bson_print (bd->bson);
         break;
       }
     }
