@@ -380,7 +380,8 @@ mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
  */
 int
 mongotcl_setMongoError (Tcl_Interp *interp, mongo *conn) {
-    Tcl_AddErrorInfo (interp, conn->errstr);
+    char *errorString = NULL;
+    char *errorCode = NULL;
 
     switch (conn->err) {
 	case MONGO_CONN_SUCCESS: {
@@ -388,86 +389,96 @@ mongotcl_setMongoError (Tcl_Interp *interp, mongo *conn) {
 	}
 
 	case MONGO_CONN_NO_SOCKET: {
-	    Tcl_SetErrorCode (interp, "MONGO", "CONN_NO_SOCKET", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_NO_SOCKET";
+	    break;
 	}
 
 	case MONGO_CONN_FAIL: {
-	    Tcl_SetErrorCode (interp, "MONGO", "CONN_FAIL", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_FAIL";
+	    break;
 	}
+
 	case MONGO_CONN_ADDR_FAIL: {
-	    Tcl_SetErrorCode (interp, "MONGO", "CONN_ADDR_FAIL", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_ADDR_FAIL";
+	    break;
 	}
 
 	case MONGO_CONN_NOT_MASTER: {
-	    Tcl_SetErrorCode (interp, "MONGO", "CONN_NOT_MASTER", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_NOT_MASTER";
+	    break;
 	}
 
 	case MONGO_CONN_BAD_SET_NAME: {
-	    Tcl_SetErrorCode (interp, "MONGO", "CONN_BAD_SET_NAME", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_BAD_SET_NAME";
+	    break;
 	}
 
 	case MONGO_CONN_NO_PRIMARY: {
-	    Tcl_SetErrorCode (interp, "MONGO", "CONN_NO_PRIMARY", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_NO_PRIMARY";
+	    break;
 	}
 
 	case MONGO_IO_ERROR: {
-	    Tcl_SetErrorCode (interp, "MONGO", "IO_ERROR", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_IO_ERROR";
+	    break;
 	}
 
 	case MONGO_SOCKET_ERROR: {
-	    Tcl_SetErrorCode (interp, "MONGO", "SOCKET_ERROR", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_SOCKET_ERROR";
+	    break;
 	}
 
 	case MONGO_READ_SIZE_ERROR: {
-	    Tcl_SetErrorCode (interp, "MONGO", "READ_SIZE", NULL);
-	    return TCL_ERROR;
+	    errorCode = "CONN_READ_SIZE_ERROR";
+	    break;
 	}
 
 	case MONGO_COMMAND_FAILED: {
-	    Tcl_SetErrorCode (interp, "MONGO", "COMMAND_FAILED", NULL);
-	    return TCL_ERROR;
+	    errorCode = "COMMAND_FAILED";
+	    break;
 	}
 
 	case MONGO_WRITE_ERROR: {
-	    Tcl_SetErrorCode (interp, "MONGO", "WRITE_ERROR", NULL);
-	    return TCL_ERROR;
+	    errorCode = "WRITE_ERROR";
+	    break;
 	}
 
 	case MONGO_NS_INVALID: {
-	    Tcl_SetErrorCode (interp, "MONGO", "NS_INVALID", NULL);
-	    return TCL_ERROR;
+	    errorCode = "NS_INVALID";
+	    break;
 	}
 
 	case MONGO_BSON_INVALID: {
-	    Tcl_SetErrorCode (interp, "MONGO", "BSON_INVALID", NULL);
-	    return TCL_ERROR;
+	    errorCode = "BSON_INVALID";
+	    break;
 	}
 
 	case MONGO_BSON_NOT_FINISHED: {
-	    Tcl_SetErrorCode (interp, "MONGO", "BSON_NOT_FINISHED", NULL);
-	    return TCL_ERROR;
+	    errorCode = "BSON_NOT_FINISHED";
+	    break;
 	}
 
 	case MONGO_BSON_TOO_LARGE: {
-	    Tcl_SetErrorCode (interp, "MONGO", "BSON_TOO_LARGE", NULL);
-	    return TCL_ERROR;
+	    errorCode = "BSON_TOO_LARGE";
+	    break;
 	}
 
 	case MONGO_WRITE_CONCERN_INVALID: {
-	    Tcl_SetErrorCode (interp, "MONGO", "WRITE_CONCERN_INVALID", NULL);
-	    return TCL_ERROR;
+	    errorCode = "WRITE_CONCERN_INVALID";
+	    break;
 	}
 
     }
 
+    Tcl_SetErrorCode (interp, "MONGO", errorCode, NULL);
+
+    if (*conn->errstr != '\0') {
+	errorString = conn->errstr;
+    } else {
+	errorString = errorCode;
+    }
+
+    Tcl_SetObjResult (interp, Tcl_NewStringObj (errorString, -1));
     return TCL_ERROR;
 }
 
