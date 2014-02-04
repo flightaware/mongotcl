@@ -441,7 +441,10 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	"cursor_init",
 	"cursor_destroy",
 	"cursor_set_query",
+        "count",
         "init",
+	"last_error",
+	"prev_error",
 	"create_index",
         "set_op_timeout",
         "client",
@@ -451,6 +454,10 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "replica_set_add_seed",
         "replica_set_client",
         "clear_errors",
+        "authenticate",
+        "add_user",
+        "drop_collection",
+        "drop_db",
         NULL
     };
 
@@ -463,7 +470,10 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_CURSOR_INIT,
         OPT_CURSOR_DESTROY,
         OPT_CURSOR_SET_QUERY,
+	OPT_COUNT,
         OPT_INIT,
+	OPT_GET_LAST_ERROR,
+	OPT_GET_PREV_ERROR,
         OPT_CREATE_INDEX,
         OPT_SET_OP_TIMEOUT,
         OPT_CLIENT,
@@ -472,7 +482,11 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
         OPT_REPLICA_SET_CLIENT,
-        OPT_CLEAR_ERRORS
+        OPT_CLEAR_ERRORS,
+	OPT_CMD_AUTHENTICATE,
+	OPT_CMD_ADD_USER,
+	OPT_CMD_DROP_COLLECTION,
+	OPT_CMD_DROP_DB,
     };
 
     /* basic validation of command line arguments */
@@ -519,6 +533,22 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         break;
       }
 
+      case OPT_COUNT: {
+        bson *query;
+
+	if (objc != 4) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "db collection");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_count (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), query) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+		return mongotcl_setMongoError (interp, md->conn);
+	}
+        break;
+      }
+
+
       case OPT_INIT: {
 	if (objc != 2) {
 	    Tcl_WrongNumArgs (interp, 1, objv, "init");
@@ -526,6 +556,36 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	}
 
 	mongo_init (md->conn);
+        break;
+      }
+
+      case OPT_GET_LAST_ERROR: {
+	bson *out;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "db");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_cmd_get_last_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
+        break;
+      }
+
+      case OPT_GET_PREV_ERROR: {
+	bson *out;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "db");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_cmd_get_prev_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
         break;
       }
 
@@ -636,6 +696,56 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	}
 
 	mongo_clear_errors (md->conn);
+        break;
+      }
+
+      case OPT_CMD_AUTHENTICATE: {
+	if (objc != 5) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "db user pass");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_cmd_authenticate (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), Tcl_GetString(objv[4])) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+        break;
+      }
+
+      case OPT_CMD_ADD_USER: {
+	if (objc != 5) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "db user pass");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_cmd_add_user (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), Tcl_GetString(objv[4])) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+        break;
+      }
+
+      case OPT_CMD_DROP_COLLECTION: {
+	bson *out;
+
+	if (objc != 4) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "db collect");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_cmd_drop_collection (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), out) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+        break;
+      }
+
+      case OPT_CMD_DROP_DB: {
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "db");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_cmd_drop_db (md->conn, Tcl_GetString(objv[2])) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
         break;
       }
     }
