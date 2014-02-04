@@ -544,6 +544,34 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
       }
 
       case OPT_INSERT_BATCH: {
+	bson **bsonList;
+	int listObjc;
+	int i;
+	Tcl_Obj **listObjv;
+
+	if (objc != 4) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "namespace bsonList");
+	    return TCL_ERROR;
+	}
+
+	/* retrieve the list of bson objects */
+	if (Tcl_ListObjGetElements (interp, objv[3], &listObjc, &listObjv) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while getting bson objects from list");
+	    return TCL_ERROR;
+	}
+
+	bsonList = (bson **)ckalloc (sizeof (bson *) * listObjc);
+
+	for (i = 0; i < listObjc; i++) {
+	    if (mongotcl_cmdNameObjToBson (interp, listObjv[i], bsonList[i]) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+	}
+
+	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, 0, 0) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
         break;
       }
 
