@@ -931,6 +931,12 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
       }
 
       case OPT_REPLICA_SET_INIT: {
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "setname");
+	    return TCL_ERROR;
+	}
+
+	mongo_replica_set_init (md->conn, Tcl_GetString(objv[2]));
         break;
       }
 
