@@ -450,6 +450,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "replica_set_init",
         "replica_set_add_seed",
         "replica_set_client",
+        "clear_errors",
         NULL
     };
 
@@ -470,7 +471,8 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	OPT_CHECK_CONNECTION,
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
-        OPT_REPLICA_SET_CLIENT
+        OPT_REPLICA_SET_CLIENT,
+        OPT_CLEAR_ERRORS
     };
 
     /* basic validation of command line arguments */
@@ -621,10 +623,21 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    return TCL_ERROR;
 	}
 
-	mongo_replica_set_client (md->conn);
+	if (mongo_replica_set_client (md->conn) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
         break;
       }
 
+      case OPT_CLEAR_ERRORS: {
+	if (objc != 2) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "clear_errors");
+	    return TCL_ERROR;
+	}
+
+	mongo_clear_errors (md->conn);
+        break;
+      }
     }
     return TCL_OK;
 }
