@@ -62,6 +62,23 @@ mongotcl_setBsonError (Tcl_Interp *interp, bson *bson) {
     return TCL_ERROR;
 }
 
+static int
+mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *bson) {
+    Tcl_CmdInfo	cmdInfo;
+
+    if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
+	return TCL_ERROR;
+    }
+
+    if (cmdInfo.objClientData == NULL) {
+	Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a bson object", NULL);
+	return TCL_ERROR;
+    }
+
+    bson = ((mongotcl_bsonClientData *)cmdInfo.objClientData)->bson;
+    return TCL_OK;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -504,6 +521,21 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
     switch ((enum options) optIndex) {
       case OPT_INSERT: {
+	bson *bson;
+
+	if (objc != 4) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "namespace bson");
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], bson) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (mongo_insert (md->conn, Tcl_GetString(objv[2]), bson, 0) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
 	  break;
       }
 
