@@ -7,6 +7,7 @@
  */
 
 #include "mongotcl.h"
+#include <assert.h>
 
 
 /*
@@ -27,6 +28,8 @@ void
 mongotcl_bsonObjectDelete (ClientData clientData)
 {
     mongotcl_bsonClientData *bd = (mongotcl_bsonClientData *)clientData;
+
+    assert (bd->bson_magic == MONGOTCL_BSON_MAGIC);
 
     bson_destroy(bd->bson);
     ckfree((char *)bd->bson);
@@ -85,7 +88,7 @@ mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *bs
 	return TCL_ERROR;
     }
 
-    if (cmdInfo.objClientData == NULL) {
+    if (cmdInfo.objClientData == NULL || ((mongotcl_bsonClientData *)cmdInfo.objClientData)->bson_magic != MONGOTCL_BSON_MAGIC) {
 	Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a bson object", NULL);
 	return TCL_ERROR;
     }
@@ -453,6 +456,8 @@ void
 mongotcl_mongoObjectDelete (ClientData clientData)
 {
     mongotcl_clientData *md = (mongotcl_clientData *)clientData;
+
+    assert (md->mongo_magic == MONGOTCL_MONGO_MAGIC);
 
     mongo_destroy(md->conn);
     ckfree((char *)md->conn);
@@ -908,6 +913,7 @@ mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 
     md->conn = (mongo *)ckalloc(sizeof(mongo));
     md->interp = interp;
+    md->mongo_magic = MONGOTCL_MONGO_MAGIC;
 
     mongo_init (md->conn);
 
