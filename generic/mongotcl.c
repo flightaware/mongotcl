@@ -1,5 +1,9 @@
 /*
- * mongotcl
+ * mongotcl - Tcl interface to MongoDB
+ *
+ * Copyright (C) 2014 FlightAware LLC
+ *
+ * freely redistributable under the Berkeley license
  */
 
 #include "mongotcl.h"
@@ -62,6 +66,17 @@ mongotcl_setBsonError (Tcl_Interp *interp, bson *bson) {
     return TCL_ERROR;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_cmdNameObjToBson --
+ *
+ *    Take a command name, find the Tcl command info structure, return
+ *    a pointer to the bson embedded in the clientData of the object.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *bson) {
     Tcl_CmdInfo	cmdInfo;
@@ -149,7 +164,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_string (bd->bson, Tcl_GetString (objv[2]), Tcl_GetString (objv[3])) == BSON_ERROR) {
+	if (bson_append_string (bd->bson, Tcl_GetString (objv[2]), Tcl_GetString (objv[3])) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
 	break;
@@ -167,7 +182,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_int (bd->bson, Tcl_GetString (objv[2]), num) == BSON_ERROR) {
+	if (bson_append_int (bd->bson, Tcl_GetString (objv[2]), num) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
 	break;
@@ -179,7 +194,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_start_array (bd->bson, Tcl_GetString (objv[2])) == BSON_ERROR) {
+	if (bson_append_start_array (bd->bson, Tcl_GetString (objv[2])) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
@@ -191,7 +206,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_finish_array (bd->bson) == BSON_ERROR) {
+	if (bson_append_finish_array (bd->bson) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
@@ -207,7 +222,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_finish_object (bd->bson) == BSON_ERROR) {
+	if (bson_append_finish_object (bd->bson) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
@@ -219,7 +234,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_finish_object (bd->bson) == BSON_ERROR) {
+	if (bson_append_finish_object (bd->bson) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
@@ -312,6 +327,20 @@ mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     return TCL_OK;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_setMongoError --
+ *
+ *      Set an error message and error code based on an error from mongo
+ *
+ * Results:
+ *      The Tcl errorCodee thing is set and an error message is set.
+ *
+ *
+ *----------------------------------------------------------------------
+ */
 int
 mongotcl_setMongoError (Tcl_Interp *interp, mongo *conn) {
     Tcl_AddErrorInfo (interp, conn->errstr);
