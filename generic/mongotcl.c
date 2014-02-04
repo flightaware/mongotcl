@@ -765,6 +765,85 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
       }
 
       case OPT_CREATE_INDEX: {
+	bson *keyBson;
+	bson *outBson;
+	int   suboptIndex;
+	int   updateFlags = 0;
+
+	static CONST char *subOptions[] = {
+	    "unique",
+	    "drop_dups",
+	    "background",
+	    "sparse",
+	    NULL
+	};
+
+	enum suboptions {
+	    SUBOPT_INDEX_UNIQUE,
+	    SUBOPT_INDEX_DROP_DUPS,
+	    SUBOPT_INDEX_BACKGROUND,
+	    SUBOPT_INDEX_SPARSE
+	};
+
+	if (objc < 5 || objc > 6) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace keyBson outBson ?optionList?");
+	    return TCL_ERROR;
+	}
+
+	/* set updatesFlags to 0.  If a list of updateFlags is present,
+	 * parse the list.  treat anything not found as an error,
+	 * set bitfields in the updateFlags variable according
+	 * to options specified.
+	 */
+	if (objc == 6) {
+	    int listObjc;
+	    int i;
+	    Tcl_Obj **listObjv;
+
+	    if (Tcl_ListObjGetElements (interp, objv[5], &listObjc, &listObjv) == TCL_ERROR) {
+		Tcl_AddErrorInfo (interp, "while examining option list");
+		return TCL_ERROR;
+	    }
+
+	    for (i = 0; i < listObjc; i++) {
+		if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+
+		switch ((enum suboptions)suboptIndex) {
+		    case SUBOPT_INDEX_UNIQUE:
+			updateFlags |= MONGO_INDEX_UNIQUE;
+			break;
+
+		    case SUBOPT_INDEX_DROP_DUPS:
+			updateFlags |= MONGO_INDEX_DROP_DUPS;
+			break;
+
+		    case SUBOPT_INDEX_BACKGROUND:
+			updateFlags |= MONGO_INDEX_BACKGROUND;
+			break;
+
+		    case SUBOPT_INDEX_SPARSE:
+			updateFlags |= MONGO_INDEX_SPARSE;
+			break;
+		}
+	    }
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &keyBson) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while locating key bson");
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while locating ultson");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_create_index (md->conn, Tcl_GetString(objv[2]), keyBson, updateFlags, outBson) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
         break;
       }
 
