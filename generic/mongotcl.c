@@ -124,6 +124,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         "finish_array",
 	"start_object",
 	"finish_object",
+	"new_oid",
 	"finish",
         NULL
     };
@@ -132,10 +133,11 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_INIT,
         OPT_APPEND_STRING,
         OPT_APPEND_INT,
-        OPT_START_ARRAY,
-        OPT_FINISH_ARRAY,
-        OPT_START_OBJECT,
-        OPT_FINISH_OBJECT,
+        OPT_APPEND_START_ARRAY,
+        OPT_APPEND_FINISH_ARRAY,
+        OPT_APPEND_START_OBJECT,
+        OPT_APPEND_FINISH_OBJECT,
+	OPT_APPEND_NEW_OID,
         OPT_FINISH
     };
 
@@ -191,7 +193,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	break;
       }
 
-      case OPT_START_ARRAY: {
+      case OPT_APPEND_START_ARRAY: {
 	if (objc != 3) {
 	    Tcl_WrongNumArgs (interp, 2, objv, "name");
 	    return TCL_ERROR;
@@ -203,7 +205,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         break;
       }
 
-      case OPT_FINISH_ARRAY: {
+      case OPT_APPEND_FINISH_ARRAY: {
 	if (objc != 2) {
 	    Tcl_WrongNumArgs (interp, 1, objv, "finish_array");
 	    return TCL_ERROR;
@@ -215,17 +217,37 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         break;
       }
 
-      case OPT_START_OBJECT: {
+      case OPT_APPEND_START_OBJECT: {
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "name");
+	    return TCL_ERROR;
+	}
+
+	if (bson_append_start_object (bd->bson, Tcl_GetString (objv[2])) != BSON_OK) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
         break;
       }
 
-      case OPT_FINISH_OBJECT: {
+      case OPT_APPEND_FINISH_OBJECT: {
 	if (objc != 2) {
 	    Tcl_WrongNumArgs (interp, 1, objv, "finish_object");
 	    return TCL_ERROR;
 	}
 
 	if (bson_append_finish_object (bd->bson) != BSON_OK) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
+        break;
+      }
+
+      case OPT_APPEND_NEW_OID: {
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "name");
+	    return TCL_ERROR;
+	}
+
+	if (bson_append_new_oid (bd->bson, Tcl_GetString (objv[2])) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
