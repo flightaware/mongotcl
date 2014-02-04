@@ -29,6 +29,39 @@ mongotcl_bsonObjectDelete (ClientData clientData)
     ckfree((char *)clientData);
 }
 
+int
+mongotcl_setBsonError (Tcl_Interp *interp, bson *bson) {
+    Tcl_Obj *list = Tcl_NewObj();
+    Tcl_Obj *errorCodeList = Tcl_NewObj();
+
+    if (bson->err & BSON_NOT_UTF8) {
+	Tcl_AddErrorInfo (interp, "bson not utf8");
+	Tcl_ListObjAppendElement (interp, list, Tcl_NewStringObj("NOT_UTF8",-1));
+    }
+
+    if (bson->err & BSON_FIELD_HAS_DOT) {
+	Tcl_AddErrorInfo (interp, "bson field has dot");
+	Tcl_ListObjAppendElement (interp, list, Tcl_NewStringObj("HAS_DOT",-1));
+    }
+
+    if (bson->err & BSON_FIELD_INIT_DOLLAR) {
+	Tcl_AddErrorInfo (interp, "bson field has initial dollar sign");
+	Tcl_ListObjAppendElement (interp, list, Tcl_NewStringObj("INIT_DOLLAR",-1));
+    }
+
+    if (bson->err & BSON_ALREADY_FINISHED) {
+	Tcl_AddErrorInfo (interp, "bson already finished");
+	Tcl_ListObjAppendElement (interp, list, Tcl_NewStringObj("ALREADY_FINISHED",-1));
+    }
+
+    Tcl_ListObjAppendElement(interp, errorCodeList, Tcl_NewStringObj("BSON",-1));
+    Tcl_ListObjAppendElement(interp, errorCodeList, list);
+
+    Tcl_SetObjErrorCode (interp, errorCodeList);
+
+    return TCL_ERROR;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -98,7 +131,9 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	bson_append_string (bd->bson, Tcl_GetString (objv[2]), Tcl_GetString (objv[3]));
+	if (bson_append_string (bd->bson, Tcl_GetString (objv[2]), Tcl_GetString (objv[3])) == BSON_ERROR) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
 	break;
       }
 
@@ -108,7 +143,9 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	bson_append_start_array (bd->bson, Tcl_GetString (objv[2]));
+	if (bson_append_start_array (bd->bson, Tcl_GetString (objv[2])) == BSON_ERROR) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
         break;
       }
 
@@ -118,7 +155,9 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	bson_append_finish_array (bd->bson);
+	if (bson_append_finish_array (bd->bson) == BSON_ERROR) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
         break;
       }
 
@@ -132,7 +171,9 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	bson_append_finish_object (bd->bson);
+	if (bson_append_finish_object (bd->bson) == BSON_ERROR) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
         break;
       }
 
@@ -142,8 +183,8 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_finish_object (bd->bson) != BSON_OK) {
-	    return TCL_ERROR;
+	if (bson_append_finish_object (bd->bson) == BSON_ERROR) {
+	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
       }
