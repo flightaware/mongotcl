@@ -17,7 +17,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * mongotcl_Init --
+ * Mongotcl_Init --
  *
  *	Initialize the mongotcl extension.  The string "mongotcl" 
  *      in the function name must match the PACKAGE declaration at the top of
@@ -33,7 +33,7 @@
  */
 
 EXTERN int
-Yajltcl_Init(Tcl_Interp *interp)
+Mongotcl_Init(Tcl_Interp *interp)
 {
     /*
      * This may work with 8.0, but we are using strictly stubs here,
@@ -51,6 +51,10 @@ Yajltcl_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
+    /* Create the bson command  */
+    Tcl_CreateObjCommand(interp, "bson", (Tcl_ObjCmdProc *) mongotcl_bsonObjCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+
     /* Create the mongo command  */
     Tcl_CreateObjCommand(interp, "mongo", (Tcl_ObjCmdProc *) mongotcl_mongoObjCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
@@ -65,8 +69,6 @@ Yajltcl_Init(Tcl_Interp *interp)
  *
  *	Initialize the mongotcl in a safe interpreter.
  *
- *      This should be totally safe.
- *
  * Results:
  *	A standard Tcl result
  *
@@ -77,7 +79,7 @@ Yajltcl_Init(Tcl_Interp *interp)
  */
 
 EXTERN int
-Yajltcl_SafeInit(Tcl_Interp *interp)
+Mongotcl_SafeInit(Tcl_Interp *interp)
 {
     /*
      * This may work with 8.0, but we are using strictly stubs here,

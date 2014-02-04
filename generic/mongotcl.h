@@ -19,6 +19,9 @@
 extern int
 mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objvp[]);
 
+extern int
+mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objvp[]);
+
 typedef struct mongotcl_clientData
 {
     Tcl_Interp *interp;
