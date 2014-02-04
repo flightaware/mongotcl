@@ -79,12 +79,12 @@ int
 mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
     int         optIndex;
-    int         arg;
     mongotcl_bsonClientData *bd = (mongotcl_bsonClientData *)cData;
 
     static CONST char *options[] = {
         "init",
         "string",
+        "int",
         "start_array",
         "finish_array",
 	"start_object",
@@ -95,7 +95,8 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 
     enum options {
         OPT_INIT,
-        OPT_STRING,
+        OPT_APPEND_STRING,
+        OPT_APPEND_INT,
         OPT_START_ARRAY,
         OPT_FINISH_ARRAY,
         OPT_START_OBJECT,
@@ -109,7 +110,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj (interp, objv[arg], options, "option",
+    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
 	TCL_EXACT, &optIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -125,13 +126,31 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	break;
       }
 
-      case OPT_STRING: {
+      case OPT_APPEND_STRING: {
 	if (objc != 4) {
 	    Tcl_WrongNumArgs (interp, 2, objv, "key value");
 	    return TCL_ERROR;
 	}
 
 	if (bson_append_string (bd->bson, Tcl_GetString (objv[2]), Tcl_GetString (objv[3])) == BSON_ERROR) {
+	    return mongotcl_setBsonError (interp, bd->bson);
+	}
+	break;
+      }
+
+      case OPT_APPEND_INT: {
+	int num;
+
+	if (objc != 4) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "key value");
+	    return TCL_ERROR;
+	}
+
+	if (Tcl_GetIntFromObj (interp, objv[3], &num) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (bson_append_int (bd->bson, Tcl_GetString (objv[2]), num) == BSON_ERROR) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
 	break;
@@ -318,7 +337,6 @@ int
 mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
     int         optIndex;
-    int         arg;
     mongotcl_clientData *md = (mongotcl_clientData *)cData;
 
     static CONST char *options[] = {
@@ -366,7 +384,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj (interp, objv[arg], options, "option",
+    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
 	TCL_EXACT, &optIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
