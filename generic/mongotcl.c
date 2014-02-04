@@ -446,6 +446,8 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "set_op_timeout",
         "client",
         "destroy",
+        "reconnect",
+        "check_connection",
         "replica_set_init",
         "replica_set_add_seed",
         "replica_set_client",
@@ -466,6 +468,8 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_SET_OP_TIMEOUT,
         OPT_CLIENT,
         OPT_DESTROY,
+	OPT_RECONNECT,
+	OPT_CHECK_CONNECTION,
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
         OPT_REPLICA_SET_CLIENT
@@ -560,7 +564,9 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    return TCL_ERROR;
 	}
 
-	mongo_client (md->conn, address, port);
+	if (mongo_client (md->conn, address, port) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
         break;
       }
 
@@ -572,6 +578,30 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	}
 
 	mongo_destroy (md->conn);
+        break;
+      }
+
+      case OPT_RECONNECT: {
+	if (objc != 2) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "reconnect");
+	    return TCL_ERROR;
+	}
+
+	mongo_reconnect (md->conn);
+        break;
+      }
+
+      case OPT_CHECK_CONNECTION: {
+	if (objc != 2) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "check_connection");
+	    return TCL_ERROR;
+	}
+
+	if (mongo_check_connection (md->conn) == MONGO_OK) {
+	    Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
+	} else {
+	    Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
+	}
         break;
       }
 
