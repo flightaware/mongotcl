@@ -146,7 +146,7 @@ SHARED_BUILD	= @SHARED_BUILD@
 
 # NB FIX the configure script to do this the right way
 MONGOINCLUDES=-I"/usr/local/include"
-MONGOLIBS=-L"/usr/local/lib" -lmongo
+MONGOLIBS=-L"/usr/local/lib" -lmongoc
 
 INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ $(MONGOINCLUDES)
 #INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@ @TK_INCLUDES@ @TK_XINCLUDES@

@@ -9,7 +9,12 @@
  */
 
 #include <tcl.h>
+
+#define MONGO_HAVE_STDINT
+
 #include <mongo.h>
+
+// MONGO_HAVE_STDINT, MONGO_HAVE_UNISTD, MONGO_USE__INT64, or MONGO_USE_LONG_LONG_INT.
 
 extern int
 mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objvp[]);
@@ -17,7 +22,7 @@ mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 typedef struct mongotcl_clientData
 {
     Tcl_Interp *interp;
-    mongo conn;
+    mongo *conn;
     Tcl_Command cmdToken;
 } mongotcl_clientData;
 
