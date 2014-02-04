@@ -449,6 +449,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "set_op_timeout",
         "client",
         "reconnect",
+        "disconnect",
         "check_connection",
         "replica_set_init",
         "replica_set_add_seed",
@@ -478,6 +479,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_SET_OP_TIMEOUT,
         OPT_CLIENT,
 	OPT_RECONNECT,
+	OPT_DISCONNECT,
 	OPT_CHECK_CONNECTION,
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
@@ -637,6 +639,16 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	}
 
 	mongo_reconnect (md->conn);
+        break;
+      }
+
+      case OPT_DISCONNECT: {
+	if (objc != 2) {
+	    Tcl_WrongNumArgs (interp, 1, objv, "disconnect");
+	    return TCL_ERROR;
+	}
+
+	mongo_disconnect (md->conn);
         break;
       }
 
