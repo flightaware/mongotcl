@@ -26,3 +26,10 @@ typedef struct mongotcl_clientData
     Tcl_Command cmdToken;
 } mongotcl_clientData;
 
+typedef struct mongotcl_bsonClientData
+{
+    Tcl_Interp *interp;
+    bson *bson;
+    Tcl_Command cmdToken;
+} mongotcl_bsonClientData;
+
