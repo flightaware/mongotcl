@@ -295,6 +295,99 @@ mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     return TCL_OK;
 }
 
+int
+mongotcl_setMongoError (Tcl_Interp *interp, mongo *conn) {
+    Tcl_AddErrorInfo (interp, conn->errstr);
+
+    switch (conn->err) {
+	case MONGO_CONN_SUCCESS: {
+	    return TCL_OK;
+	}
+
+	case MONGO_CONN_NO_SOCKET: {
+	    Tcl_SetErrorCode (interp, "MONGO", "CONN_NO_SOCKET", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_CONN_FAIL: {
+	    Tcl_SetErrorCode (interp, "MONGO", "CONN_FAIL", NULL);
+	    return TCL_ERROR;
+	}
+	case MONGO_CONN_ADDR_FAIL: {
+	    Tcl_SetErrorCode (interp, "MONGO", "CONN_ADDR_FAIL", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_CONN_NOT_MASTER: {
+	    Tcl_SetErrorCode (interp, "MONGO", "CONN_NOT_MASTER", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_CONN_BAD_SET_NAME: {
+	    Tcl_SetErrorCode (interp, "MONGO", "CONN_BAD_SET_NAME", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_CONN_NO_PRIMARY: {
+	    Tcl_SetErrorCode (interp, "MONGO", "CONN_NO_PRIMARY", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_IO_ERROR: {
+	    Tcl_SetErrorCode (interp, "MONGO", "IO_ERROR", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_SOCKET_ERROR: {
+	    Tcl_SetErrorCode (interp, "MONGO", "SOCKET_ERROR", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_READ_SIZE_ERROR: {
+	    Tcl_SetErrorCode (interp, "MONGO", "READ_SIZE", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_COMMAND_FAILED: {
+	    Tcl_SetErrorCode (interp, "MONGO", "COMMAND_FAILED", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_WRITE_ERROR: {
+	    Tcl_SetErrorCode (interp, "MONGO", "WRITE_ERROR", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_NS_INVALID: {
+	    Tcl_SetErrorCode (interp, "MONGO", "NS_INVALID", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_BSON_INVALID: {
+	    Tcl_SetErrorCode (interp, "MONGO", "BSON_INVALID", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_BSON_NOT_FINISHED: {
+	    Tcl_SetErrorCode (interp, "MONGO", "BSON_NOT_FINISHED", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_BSON_TOO_LARGE: {
+	    Tcl_SetErrorCode (interp, "MONGO", "BSON_TOO_LARGE", NULL);
+	    return TCL_ERROR;
+	}
+
+	case MONGO_WRITE_CONCERN_INVALID: {
+	    Tcl_SetErrorCode (interp, "MONGO", "WRITE_CONCERN_INVALID", NULL);
+	    return TCL_ERROR;
+	}
+
+    }
+
+    return TCL_ERROR;
+}
+
 
 /*
  *--------------------------------------------------------------
