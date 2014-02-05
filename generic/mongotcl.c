@@ -232,7 +232,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	}
 
 	for (i = 0; i < listObjc; i += 2) {
-	    if (bson_append_string (bd->bson, Tcl_GetString (objv[i]), Tcl_GetString (objv[i + 1])) != BSON_OK) {
+	    if (bson_append_string (bd->bson, Tcl_GetString (listObjv[i]), Tcl_GetString (listObjv[i + 1])) != BSON_OK) {
 		return mongotcl_setBsonError (interp, bd->bson);
 	    }
 	}
