@@ -36,6 +36,20 @@ mongotcl_bsonObjectDelete (ClientData clientData)
     ckfree((char *)clientData);
 }
 
+
+/*
+ *--------------------------------------------------------------
+ *
+ * mongotcl_setBsonError -- command deletion callback routine.
+ *
+ * Results:
+ *      ...create an error message based on bson object error fields.
+ *      ...set errorCode based on the same bson object error fields.
+ *
+ *      return TCL_ERROR
+ *
+ *--------------------------------------------------------------
+ */
 int
 mongotcl_setBsonError (Tcl_Interp *interp, bson *bson) {
     Tcl_Obj *list = Tcl_NewObj();
@@ -283,6 +297,218 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 
 
 /*
+ *--------------------------------------------------------------
+ *
+ * mongotcl_cursorObjectDelete -- command deletion callback routine.
+ *
+ * Results:
+ *      ...frees the mongo cursor object.
+ *      ...frees memory
+ *
+ * Side effects:
+ *      None.
+ *
+ *--------------------------------------------------------------
+ */
+void
+mongotcl_cursorObjectDelete (ClientData clientData)
+{
+    mongotcl_cursorClientData *mc = (mongotcl_cursorClientData *)clientData;
+
+    assert (mc->cursor_magic == MONGOTCL_CURSOR_MAGIC);
+
+    mongo_cursor_destroy(mc->cursor);
+    ckfree((char *)mc->cursor);
+    ckfree((char *)clientData);
+}
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * mongotcl_setCursorError -- command deletion callback routine.
+ *
+ * Results:
+ *      ...create an error message based on mongo cursor object error fields.
+ *      ...set errorCode based on the same mongo cursor object error fields.
+ *
+ *      return TCL_ERROR
+ *
+ *--------------------------------------------------------------
+ */
+int
+mongotcl_setCursorError (Tcl_Interp *interp, mongo_cursor *cursor) {
+    char *errorCode = NULL;
+
+    switch (cursor->err) {
+	case MONGO_CURSOR_EXHAUSTED: {
+	    errorCode = "CURSOR_EXHAUSTED";
+	    break;
+	}
+
+	case MONGO_CURSOR_INVALID: {
+	    errorCode = "CURSOR_INVALID";
+	    break;
+	}
+
+	case MONGO_CURSOR_PENDING: {
+	    errorCode = "CURSOR_PENDING";
+	    break;
+	}
+
+	case MONGO_CURSOR_QUERY_FAIL: {
+	    errorCode = "CURSOR_QUERY_FAIL";
+	    break;
+	}
+
+	case MONGO_CURSOR_BSON_ERROR: {
+	    errorCode = "CURSOR_BSON_ERROR";
+	    break;
+	}
+    }
+
+    Tcl_SetErrorCode (interp, "MONGO", errorCode, NULL);
+
+    Tcl_SetObjResult (interp, Tcl_NewStringObj (errorCode, -1));
+    return TCL_ERROR;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_cmdNameObjToCursor --
+ *
+ *    Take a command name, find the Tcl command info structure, return
+ *    a pointer to the bson embedded in the clientData of the object.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+mongotcl_cmdNameObjToCursor (Tcl_Interp *interp, Tcl_Obj *commandNameObj, mongo_cursor **cursor) {
+    Tcl_CmdInfo	cmdInfo;
+
+    if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
+	return TCL_ERROR;
+    }
+
+    if (cmdInfo.objClientData == NULL || ((mongotcl_cursorClientData *)cmdInfo.objClientData)->cursor_magic != MONGOTCL_CURSOR_MAGIC) {
+	Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a mongo cursor object", NULL);
+	return TCL_ERROR;
+    }
+
+    *cursor = ((mongotcl_cursorClientData *)cmdInfo.objClientData)->cursor;
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_cursorObjectObjCmd --
+ *
+ *    dispatches the subcommands of a mongo cursor object command
+ *
+ * Results:
+ *    stuff
+ *
+ *----------------------------------------------------------------------
+ */
+int
+mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
+{
+    int         optIndex;
+    mongotcl_cursorClientData *mc = (mongotcl_cursorClientData *)cData;
+
+    static CONST char *options[] = {
+        "init",
+        "set_query",
+        "set_fields",
+        "set_skip",
+        "set_limit",
+	"set_options",
+	"data",
+	"bson",
+	"next",
+        NULL
+    };
+
+    enum options {
+        OPT_CURSOR_INIT,
+        OPT_CURSOR_SET_QUERY,
+        OPT_CURSOR_SET_FIELDS,
+        OPT_CURSOR_SET_SKIP,
+        OPT_CURSOR_SET_LIMIT,
+        OPT_CURSOR_SET_OPTIONS,
+        OPT_CURSOR_DATA,
+	OPT_CURSOR_BSON,
+        OPT_CURSOR_NEXT
+    };
+
+    /* basic validation of command line arguments */
+    if (objc < 2) {
+        Tcl_WrongNumArgs (interp, 1, objv, "subcommand ?args?");
+        return TCL_ERROR;
+    }
+
+    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
+	TCL_EXACT, &optIndex) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    switch ((enum options) optIndex) {
+      case OPT_CURSOR_INIT: {
+	char *ns;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace");
+	    return TCL_ERROR;
+	}
+
+	ns = Tcl_GetString (objv[2]);
+	mongo_cursor_init (mc->cursor, mc->conn, ns);
+	break;
+      }
+
+      case OPT_CURSOR_SET_QUERY: {
+	break;
+      }
+
+      case OPT_CURSOR_SET_FIELDS: {
+	break;
+      }
+
+      case OPT_CURSOR_SET_SKIP: {
+	break;
+      }
+
+      case OPT_CURSOR_SET_LIMIT: {
+	break;
+      }
+
+      case OPT_CURSOR_SET_OPTIONS: {
+	break;
+      }
+
+      case OPT_CURSOR_DATA: {
+	break;
+      }
+
+      case OPT_CURSOR_BSON: {
+	break;
+      }
+
+      case OPT_CURSOR_NEXT: {
+	break;
+      }
+
+    }
+
+    return TCL_OK;
+}
+
+
+/*
  *----------------------------------------------------------------------
  *
  * mongotcl_bsonObjCmd --
@@ -357,6 +583,89 @@ mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
     // create a Tcl command to interface to mongo
     bd->cmdToken = Tcl_CreateObjCommand (interp, commandName, mongotcl_bsonObjectObjCmd, bd, mongotcl_bsonObjectDelete);
+    Tcl_SetObjResult (interp, Tcl_NewStringObj (commandName, -1));
+    if (autoGeneratedName == 1) {
+        ckfree(commandName);
+    }
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_mongoCursorObjCmd --
+ *
+ *      Create a mongo cursor object...
+ *
+ *      mongo_cursor create my_mongo
+ *      mongo_cursor create #auto
+ *
+ * The created object is invoked to do things with a MongoDB
+ *
+ * Results:
+ *      A standard Tcl result.
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+    /* ARGSUSED */
+int
+mongotcl_mongoCursorObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
+{
+    mongotcl_cursorClientData *mc;
+    int                 optIndex;
+    char               *commandName;
+    int                 autoGeneratedName;
+
+    static CONST char *options[] = {
+        "create",
+        NULL
+    };
+
+    enum options {
+        OPT_CREATE
+    };
+
+    // basic command line processing
+    if (objc != 3) {
+        Tcl_WrongNumArgs (interp, 1, objv, "create name");
+        return TCL_ERROR;
+    }
+
+    // argument must be one of the subOptions defined above
+    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
+        TCL_EXACT, &optIndex) != TCL_OK) {
+        return TCL_ERROR;
+    }
+
+    // allocate one of our mongo client data objects for Tcl and configure it
+    mc = (mongotcl_cursorClientData *)ckalloc (sizeof (mongotcl_cursorClientData));
+
+    mc->cursor = (mongo_cursor *)ckalloc(sizeof(mongo_cursor));
+    mc->interp = interp;
+
+    mongo_cursor_init (mc->cursor, mc->conn, ns);
+
+    commandName = Tcl_GetString (objv[2]);
+
+    // if commandName is #auto, generate a unique name for the object
+    autoGeneratedName = 0;
+    if (strcmp (commandName, "#auto") == 0) {
+        static unsigned long nextAutoCounter = 0;
+        char *objName;
+        int    baseNameLength;
+
+        objName = Tcl_GetStringFromObj (objv[0], &baseNameLength);
+        baseNameLength += snprintf (NULL, 0, "%lu", nextAutoCounter) + 1;
+        commandName = ckalloc (baseNameLength);
+        snprintf (commandName, baseNameLength, "%s%lu", objName, nextAutoCounter++);
+        autoGeneratedName = 1;
+    }
+
+    // create a Tcl command to interface to mongo
+    mc->cmdToken = Tcl_CreateObjCommand (interp, commandName, mongotcl_cursorObjectObjCmd, mc, mongotcl_cursorObjectDelete);
     Tcl_SetObjResult (interp, Tcl_NewStringObj (commandName, -1));
     if (autoGeneratedName == 1) {
         ckfree(commandName);
@@ -533,10 +842,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "update",
         "insert_batch",
         "cursor",
-	"cursor_next",
-	"cursor_init",
-	"cursor_destroy",
-	"cursor_set_query",
+	"find",
         "count",
         "init",
 	"last_error",
@@ -562,11 +868,8 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_INSERT,
         OPT_UPDATE,
         OPT_INSERT_BATCH,
-        OPT_CURSOR,
-        OPT_CURSOR_NEXT,
         OPT_CURSOR_INIT,
-        OPT_CURSOR_DESTROY,
-        OPT_CURSOR_SET_QUERY,
+	OPT_MONGO_FIND,
 	OPT_COUNT,
         OPT_INIT,
 	OPT_GET_LAST_ERROR,
@@ -704,18 +1007,10 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    }
 	}
 
-	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, 0, 0) != MONGO_OK) {
+	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, NULL, 0) != MONGO_OK) {
 	    return mongotcl_setMongoError (interp, md->conn);
 	}
 
-        break;
-      }
-
-      case OPT_CURSOR: {
-        break;
-      }
-
-      case OPT_CURSOR_NEXT: {
         break;
       }
 
@@ -723,13 +1018,108 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         break;
       }
 
-      case OPT_CURSOR_DESTROY: {
+      case OPT_MONGO_FIND: {
+	char *ns;
+	bson *bsonQuery;
+	bson *bsonFields;
+	int limit;
+	int skip;
+	int listObjc;
+	int i;
+	Tcl_Obj **listObjv;
+	int cursorFlags = 0;
+	mongo_cursor *cursor;
+
+	static CONST char *subOptions[] = {
+	    "tailable",
+	    "slave_ok",
+	    "no_timeout",
+	    "exhaust",
+	    "partial",
+	    NULL
+	};
+
+	enum suboptions {
+	    SUBOPT_CURSOR_TAILABLE,
+	    SUBOPT_CURSOR_SLAVE_OK,
+	    SUBOPT_CURSOR_NO_TIMEOUT,
+	    SUBOPT_CURSOR_AWAIT_DATA,
+	    SUBOPT_CURSOR_EXHAUST,
+	    SUBOPT_CURSOR_PARTIAL
+	};
+
+	if (objc != 8) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonQuery bsonFields limit skip options");
+	    return TCL_ERROR;
+	}
+
+	ns = Tcl_GetString (objv[2]);
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonQuery) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while locating query bson");
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[4], &bsonFields) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while locating query bson");
+	    return TCL_ERROR;
+	}
+
+	if (Tcl_GetIntFromObj (interp, objv[5], &limit) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (Tcl_GetIntFromObj (interp, objv[6], &skip) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (Tcl_ListObjGetElements (interp, objv[7], &listObjc, &listObjv) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while examining option list");
+	    return TCL_ERROR;
+	}
+
+	for (i = 0; i < listObjc; i++) {
+	    int suboptIndex;
+
+	    if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    switch ((enum suboptions)suboptIndex) {
+		case SUBOPT_CURSOR_TAILABLE:
+		    cursorFlags |= MONGO_TAILABLE;
+		    break;
+
+		case SUBOPT_CURSOR_SLAVE_OK:
+		    cursorFlags |= MONGO_SLAVE_OK;
+		    break;
+
+		case SUBOPT_CURSOR_NO_TIMEOUT:
+		    cursorFlags |= MONGO_NO_CURSOR_TIMEOUT;
+		    break;
+
+		case SUBOPT_CURSOR_AWAIT_DATA:
+		    cursorFlags |= MONGO_AWAIT_DATA;
+		    break;
+
+		case SUBOPT_CURSOR_EXHAUST:
+		    cursorFlags |= MONGO_EXHAUST;
+		    break;
+
+		case SUBOPT_CURSOR_PARTIAL:
+		    cursorFlags |= MONGO_PARTIAL;
+		    break;
+	    }
+	}
+
+	if ((cursor = mongo_find (md->conn, ns, bsonQuery, bsonFields, limit, skip, cursorFlags)) == NULL) {
+	    return TCL_ERROR;
+	}
+
+
         break;
       }
 
-      case OPT_CURSOR_SET_QUERY: {
-        break;
-      }
 
       case OPT_COUNT: {
         bson *query;

@@ -16,6 +16,8 @@
 
 #define MONGOTCL_MONGO_MAGIC 0xf33dd00d
 
+#define MONGOTCL_CURSOR_MAGIC 0xf33dc00c
+
 #include <mongo.h>
 
 // MONGO_HAVE_STDINT, MONGO_HAVE_UNISTD, MONGO_USE__INT64, or MONGO_USE_LONG_LONG_INT.
@@ -41,4 +43,13 @@ typedef struct mongotcl_bsonClientData
     bson *bson;
     Tcl_Command cmdToken;
 } mongotcl_bsonClientData;
+
+typedef struct mongotcl_cursorClientData
+{
+    int cursor_magic;
+    mongo *conn;
+    Tcl_Interp *interp;
+    mongo_cursor *cursor;
+    Tcl_Command cmdToken;
+} mongotcl_cursorClientData;
 
