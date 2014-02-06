@@ -910,7 +910,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	bson *bson;
 
 	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "namespace bson");
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bson");
 	    return TCL_ERROR;
 	}
 
@@ -993,7 +993,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	Tcl_Obj **listObjv;
 
 	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "namespace bsonList");
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonList");
 	    return TCL_ERROR;
 	}
 
@@ -1163,7 +1163,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	bson *out;
 
 	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "db");
+	    Tcl_WrongNumArgs (interp, 2, objv, "db");
 	    return TCL_ERROR;
 	}
 
@@ -1178,7 +1178,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	bson *out;
 
 	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "db");
+	    Tcl_WrongNumArgs (interp, 2, objv, "db");
 	    return TCL_ERROR;
 	}
 
