@@ -381,6 +381,7 @@ mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
     bd->bson = (bson *)ckalloc(sizeof(bson));
     bd->interp = interp;
+    bd->bson_magic = MONGOTCL_BSON_MAGIC;
 
     bson_init (bd->bson);
 
