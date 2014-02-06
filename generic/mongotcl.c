@@ -306,7 +306,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    return TCL_ERROR;
 	}
 
-	if (bson_append_finish_object (bd->bson) != BSON_OK) {
+	if (bson_finish (bd->bson) != BSON_OK) {
 	    return mongotcl_setBsonError (interp, bd->bson);
 	}
         break;
