@@ -74,17 +74,41 @@ Append a key and value to the bson object.
 
 Append a key and value to the bson object where the value is a number.
 
+* bson double $key $value
+
+Append a key and value to the bson object where the value is a double-precision floating point.
+
+* bson clock $key $epoch
+
+Append a key and epoch to the bson object.
+
+* bson null $key
+
+Append a key and a null.
+
+* bson undefined $key
+
+Append a key and an undefined.
+
 * $bson kvlist $list
 
-Import a list of key-value pairs.  Values are encoed as strings.  
-
-List must be ccontain an even number of elements.
+Import a list of key-value pairs.  Values are encoded as strings.  
 
 Typical usage
 
 ```tcl
     $bson kvlist [array get arrayName]
 ```
+
+List must be contain an even number of elements.
+
+* $bson binary key type $binaryData
+
+Append a key and binary data.  Type can be ''generic'', ''function'', ''uuid'', ''md5'', ''user_defined''.
+
+* $bson bson key bsonObject
+
+Append a key and contents of a bson object to the bson object.
 
 * $bson start_array
 
@@ -98,14 +122,25 @@ Note that the docs say that it's still key value but the keys need to be 0, 1, 2
 
 * $bson start_object
 
+Start a subobject.
+
 * $bson end_object
 
+End a subobject.
+
 * $bson finish
+
+Finish the bson object.  I guess this rounds it out and completes it.
 
 * $bson print
 
 Print is for debugging only, it sort of shows you what's in the bson object.
 
+All of the methods can be combined in a single command, for example:
+
+```tcl
+$bson init string "name" "Joe" int "age" 33 finish
+```
 
 
 Methods of mongo, the MongoDB interface object
