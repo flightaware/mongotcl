@@ -1,5 +1,5 @@
 /*
- * mongotcl_Init and mongotcl_SafeInit
+ * mongo_Init and mongo_SafeInit
  *
  * Copyright (C) 2010 FlightAware
  *
@@ -17,9 +17,9 @@
 /*
  *----------------------------------------------------------------------
  *
- * Mongotcl_Init --
+ * Mongo_Init --
  *
- *	Initialize the mongotcl extension.  The string "mongotcl" 
+ *	Initialize the mongotcl extension.  The string "mongo" 
  *      in the function name must match the PACKAGE declaration at the top of
  *	configure.in.
  *
@@ -33,8 +33,9 @@
  */
 
 EXTERN int
-Mongotcl_Init(Tcl_Interp *interp)
+Mongo_Init(Tcl_Interp *interp)
 {
+    Tcl_Namespace *namespace;
     /*
      * This may work with 8.0, but we are using strictly stubs here,
      * which requires 8.1.
@@ -47,16 +48,20 @@ Mongotcl_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
-    if (Tcl_PkgProvide(interp, "mongotcl", PACKAGE_VERSION) != TCL_OK) {
+    if (Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION) != TCL_OK) {
 	return TCL_ERROR;
     }
 
+    namespace = Tcl_CreateNamespace (interp, "::mongo", NULL, NULL);
+
     /* Create the bson command  */
-    Tcl_CreateObjCommand(interp, "bson", (Tcl_ObjCmdProc *) mongotcl_bsonObjCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+    Tcl_CreateObjCommand(interp, "::mongo::bson", (Tcl_ObjCmdProc *) mongotcl_bsonObjCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
 
     /* Create the mongo command  */
-    Tcl_CreateObjCommand(interp, "mongo", (Tcl_ObjCmdProc *) mongotcl_mongoObjCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+    Tcl_CreateObjCommand(interp, "::mongo::mongo", (Tcl_ObjCmdProc *) mongotcl_mongoObjCmd, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    Tcl_Export (interp, namespace, "*", 0);
 
     return TCL_OK;
 }
@@ -65,7 +70,7 @@ Mongotcl_Init(Tcl_Interp *interp)
 /*
  *----------------------------------------------------------------------
  *
- * mongotcl_SafeInit --
+ * mongo_SafeInit --
  *
  *	Initialize the mongotcl in a safe interpreter.
  *
@@ -79,7 +84,7 @@ Mongotcl_Init(Tcl_Interp *interp)
  */
 
 EXTERN int
-Mongotcl_SafeInit(Tcl_Interp *interp)
+Mongo_SafeInit(Tcl_Interp *interp)
 {
     /*
      * This may work with 8.0, but we are using strictly stubs here,
@@ -93,7 +98,7 @@ Mongotcl_SafeInit(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
-    if (Tcl_PkgProvide(interp, "mongotcl", PACKAGE_VERSION) != TCL_OK) {
+    if (Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION) != TCL_OK) {
 	return TCL_ERROR;
     }
 

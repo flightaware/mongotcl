@@ -4,7 +4,7 @@
 #
 #
 
-package require mongotcl
+package require mongo
 
 namespace eval ::mongo {
 
