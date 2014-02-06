@@ -127,6 +127,7 @@ mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson **b
 int
 mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
+    int         arg;
     int         optIndex;
     mongotcl_bsonClientData *bd = (mongotcl_bsonClientData *)cData;
 
@@ -135,6 +136,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         "string",
         "int",
 	"kvlist",
+	"bson",
         "start_array",
         "finish_array",
 	"start_object",
@@ -150,6 +152,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_APPEND_STRING,
         OPT_APPEND_INT,
 	OPT_APPEND_KVLIST,
+	OPT_APPEND_BSON,
         OPT_APPEND_START_ARRAY,
         OPT_APPEND_FINISH_ARRAY,
         OPT_APPEND_START_OBJECT,
@@ -161,166 +164,168 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 
     /* basic validation of command line arguments */
     if (objc < 2) {
-        Tcl_WrongNumArgs (interp, 1, objv, "subcommand ?args?");
+        Tcl_WrongNumArgs (interp, 1, objv, "subcommand ?args? ?subcommand ?args??...");
         return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
-	TCL_EXACT, &optIndex) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    switch ((enum options) optIndex) {
-      case OPT_INIT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "init");
+    for (arg = 1; arg < objc; arg++) {
+	if (Tcl_GetIndexFromObj (interp, objv[arg], options, "option",
+	    TCL_EXACT, &optIndex) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
-	bson_init (bd->bson);
-	break;
-      }
+	switch ((enum options) optIndex) {
+	  case OPT_INIT: {
+	    bson_init (bd->bson);
+	    break;
+	  }
 
-      case OPT_APPEND_STRING: {
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "key value");
-	    return TCL_ERROR;
-	}
+	  case OPT_APPEND_STRING: {
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "string key value");
+		return TCL_ERROR;
+	    }
 
-	if (bson_append_string (bd->bson, Tcl_GetString (objv[2]), Tcl_GetString (objv[3])) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-	break;
-      }
-
-      case OPT_APPEND_INT: {
-	int num;
-
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "key value");
-	    return TCL_ERROR;
-	}
-
-	if (Tcl_GetIntFromObj (interp, objv[3], &num) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
-
-	if (bson_append_int (bd->bson, Tcl_GetString (objv[2]), num) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-	break;
-      }
-
-      case OPT_APPEND_KVLIST: {
-	int listObjc;
-	int i;
-	Tcl_Obj **listObjv;
-
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "list");
-	    return TCL_ERROR;
-	}
-
-	if (Tcl_ListObjGetElements (interp, objv[2], &listObjc, &listObjv) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while getting bson objects from list");
-	    return TCL_ERROR;
-	}
-
-	if (listObjc & 1) {
-	    Tcl_SetObjResult (interp, Tcl_NewStringObj ("list must have even number of elements", -1));
-	    return TCL_ERROR;
-	}
-
-	for (i = 0; i < listObjc; i += 2) {
-	    if (bson_append_string (bd->bson, Tcl_GetString (listObjv[i]), Tcl_GetString (listObjv[i + 1])) != BSON_OK) {
+	    if (bson_append_string (bd->bson, Tcl_GetString (objv[++arg]), Tcl_GetString (objv[++arg])) != BSON_OK) {
 		return mongotcl_setBsonError (interp, bd->bson);
 	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_INT: {
+	    int num;
+	    char *key;
+
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "int key number");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (Tcl_GetIntFromObj (interp, objv[++arg], &num) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_int (bd->bson, key, num) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_KVLIST: {
+	    int listObjc;
+	    int i;
+	    Tcl_Obj **listObjv;
+
+	    if (arg + 1 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "kvlist list");
+		return TCL_ERROR;
+	    }
+
+	    if (Tcl_ListObjGetElements (interp, objv[++arg], &listObjc, &listObjv) == TCL_ERROR) {
+		Tcl_AddErrorInfo (interp, "while getting bson objects from list");
+		return TCL_ERROR;
+	    }
+
+	    if (listObjc & 1) {
+		Tcl_SetObjResult (interp, Tcl_NewStringObj ("list must have even number of elements", -1));
+		return TCL_ERROR;
+	    }
+
+	    for (i = 0; i < listObjc; i += 2) {
+		if (bson_append_string (bd->bson, Tcl_GetString (listObjv[i]), Tcl_GetString (listObjv[i + 1])) != BSON_OK) {
+		    return mongotcl_setBsonError (interp, bd->bson);
+		}
+	    }
+
+	    break;
+	  }
+
+	  case OPT_APPEND_BSON: {
+	    char *key;
+	    bson *bson = NULL;
+
+
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "bson key bson");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (mongotcl_cmdNameObjToBson (interp, objv[++arg], &bson) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_bson (bd->bson, key, bson) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_START_ARRAY: {
+	    if (arg + 1 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "start_array name");
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_start_array (bd->bson, Tcl_GetString (objv[++arg])) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_FINISH_ARRAY: {
+	    if (bson_append_finish_array (bd->bson) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_START_OBJECT: {
+	    if (arg + 1 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "name");
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_start_object (bd->bson, Tcl_GetString (objv[++arg])) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_FINISH_OBJECT: {
+	    if (bson_append_finish_object (bd->bson) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_NEW_OID: {
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "new_oid name");
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_new_oid (bd->bson, Tcl_GetString (objv[++arg])) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_FINISH: {
+	    if (bson_finish (bd->bson) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_PRINT: {
+	    bson_print (bd->bson);
+	    break;
+	  }
 	}
-
-	break;
-      }
-
-      case OPT_APPEND_START_ARRAY: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "name");
-	    return TCL_ERROR;
-	}
-
-	if (bson_append_start_array (bd->bson, Tcl_GetString (objv[2])) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-        break;
-      }
-
-      case OPT_APPEND_FINISH_ARRAY: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "finish_array");
-	    return TCL_ERROR;
-	}
-
-	if (bson_append_finish_array (bd->bson) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-        break;
-      }
-
-      case OPT_APPEND_START_OBJECT: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "name");
-	    return TCL_ERROR;
-	}
-
-	if (bson_append_start_object (bd->bson, Tcl_GetString (objv[2])) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-        break;
-      }
-
-      case OPT_APPEND_FINISH_OBJECT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "finish_object");
-	    return TCL_ERROR;
-	}
-
-	if (bson_append_finish_object (bd->bson) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-        break;
-      }
-
-      case OPT_APPEND_NEW_OID: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "name");
-	    return TCL_ERROR;
-	}
-
-	if (bson_append_new_oid (bd->bson, Tcl_GetString (objv[2])) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-        break;
-      }
-
-      case OPT_FINISH: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "finish");
-	    return TCL_ERROR;
-	}
-
-	if (bson_finish (bd->bson) != BSON_OK) {
-	    return mongotcl_setBsonError (interp, bd->bson);
-	}
-        break;
-      }
-
-      case OPT_PRINT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "print");
-	    return TCL_ERROR;
-	}
-
-	bson_print (bd->bson);
-        break;
-      }
     }
 
     return TCL_OK;

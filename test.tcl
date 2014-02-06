@@ -8,10 +8,7 @@ m client 127.0.0.1 27017
 
 ::mongo::bson create b
 
-b init
-b string "name" "Joe"
-b int "age" 33
-b finish
+b init string "name" "Joe" int "age" 33 finish
 
 b print
 
