@@ -135,7 +135,13 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         "init",
         "string",
         "int",
+        "double",
+        "bool",
+        "clock",
+	"null",
+	"undefined",
 	"kvlist",
+	"binary",
 	"bson",
         "start_array",
         "finish_array",
@@ -151,7 +157,13 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_INIT,
         OPT_APPEND_STRING,
         OPT_APPEND_INT,
+        OPT_APPEND_DOUBLE,
+        OPT_APPEND_BOOL,
+        OPT_APPEND_CLOCK,
+        OPT_APPEND_NULL,
+        OPT_APPEND_UNDEFINED,
 	OPT_APPEND_KVLIST,
+	OPT_APPEND_BINARY,
 	OPT_APPEND_BSON,
         OPT_APPEND_START_ARRAY,
         OPT_APPEND_FINISH_ARRAY,
@@ -213,6 +225,101 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    break;
 	  }
 
+	  case OPT_APPEND_DOUBLE: {
+	    double num;
+	    char *key;
+
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "int key number");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (Tcl_GetDoubleFromObj (interp, objv[++arg], &num) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_double (bd->bson, key, num) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_BOOL: {
+	    int bool;
+	    char *key;
+
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "bool key boolVal");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (Tcl_GetBooleanFromObj (interp, objv[++arg], &bool) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_bool (bd->bson, key, bool) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_CLOCK: {
+	    long clock;
+	    char *key;
+
+	    if (arg + 2 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "clock key epoch");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (Tcl_GetLongFromObj (interp, objv[++arg], &clock) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+
+	    if (bson_append_time_t (bd->bson, key, (time_t)clock) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_NULL: {
+	    char *key;
+
+	    if (arg + 1 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "null key");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (bson_append_null (bd->bson, key) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
+	  case OPT_APPEND_UNDEFINED: {
+	    char *key;
+
+	    if (arg + 1 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "null key");
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    if (bson_append_undefined (bd->bson, key) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
+	    break;
+	  }
+
 	  case OPT_APPEND_KVLIST: {
 	    int listObjc;
 	    int i;
@@ -239,6 +346,72 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 		}
 	    }
 
+	    break;
+	  }
+
+	  case OPT_APPEND_BINARY: {
+	    char *key;
+	    unsigned char *binary;
+	    int binaryLength;
+	    int   suboptIndex;
+	    int binaryType;
+
+	    static CONST char *subTypes[] = {
+		"generic",
+		"function",
+		"uuid",
+		"md5",
+		"user_defined",
+		NULL
+	    };
+
+	    enum binary_types {
+		BINARY_TYPE_GENERIC,
+		BINARY_TYPE_FUNCTION,
+		BINARY_TYPE_UUID,
+		BINARY_TYPE_MD5,
+		BINARY_TYPE_USER_DEFINED
+	    };
+
+
+	    if (arg + 3 >= objc) {
+		Tcl_WrongNumArgs (interp, 1, objv, "binary key type value");
+		return TCL_ERROR;
+	    }
+
+	    if (Tcl_GetIndexFromObj (interp, objv[++arg], subTypes, "subtype", TCL_EXACT, &suboptIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    key = Tcl_GetString (objv[++arg]);
+
+	    binary = Tcl_GetByteArrayFromObj (objv[++arg], &binaryLength);
+
+	    switch ((enum binary_types)suboptIndex) {
+		case BINARY_TYPE_GENERIC:
+		    binaryType = BSON_BIN_BINARY;
+		    break;
+
+		case BINARY_TYPE_FUNCTION:
+		    binaryType = BSON_BIN_FUNC;
+		    break;
+
+		case BINARY_TYPE_UUID:
+		    binaryType = BSON_BIN_UUID;
+		    break;
+
+		case BINARY_TYPE_MD5:
+		    binaryType = BSON_BIN_MD5;
+
+		    break;
+		case BINARY_TYPE_USER_DEFINED:
+		    binaryType = BSON_BIN_USER;
+		    break;
+	    }
+
+	    if (bson_append_binary (bd->bson, key, binaryType, (char *)binary, binaryLength) != BSON_OK) {
+		return mongotcl_setBsonError (interp, bd->bson);
+	    }
 	    break;
 	  }
 
