@@ -24,6 +24,7 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
             break;
 
         key = bson_iterator_key (&i);
+	append_list_type_object (interp, listObj, "key", Tcl_NewStringObj (key, -1));
 
         switch (t) {
         case BSON_DOUBLE:
@@ -105,6 +106,7 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 
 	    subList = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
 	    append_list_type_object (interp, listObj, "array", subList);
+	    break;
 	}
 
         case BSON_OBJECT: {
@@ -112,6 +114,7 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 
 	    subList = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
 	    append_list_type_object (interp, listObj, "object", subList);
+	    break;
 	}
 
         default:
@@ -314,12 +317,18 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	  }
 
 	  case OPT_APPEND_STRING: {
+	    char *key;
+	    char *value;
+
 	    if (arg + 2 >= objc) {
 		Tcl_WrongNumArgs (interp, 1, objv, "string key value");
 		return TCL_ERROR;
 	    }
 
-	    if (bson_append_string (bd->bson, Tcl_GetString (objv[++arg]), Tcl_GetString (objv[++arg])) != BSON_OK) {
+	    key = Tcl_GetString (objv[++arg]);
+	    value = Tcl_GetString (objv[++arg]);
+
+	    if (bson_append_string (bd->bson, key, value) != BSON_OK) {
 		return mongotcl_setBsonError (interp, bd->bson);
 	    }
 	    break;
