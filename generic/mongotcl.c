@@ -329,8 +329,12 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
       }
 
       case OPT_CURSOR_BSON: {
-	mongo_cursor_bson (mc->cursor);
-	break;
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "bsonName");
+	    return TCL_ERROR;
+	}
+	
+	return mongotcl_create_bson_command (interp, Tcl_GetString (objv[2]), mongo_cursor_bson (mc->cursor));
       }
 
       case OPT_CURSOR_NEXT: {
