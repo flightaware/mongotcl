@@ -619,7 +619,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	  }
 
 	  case OPT_APPEND_NEW_OID: {
-	    if (arg + 2 >= objc) {
+	    if (arg + 1 >= objc) {
 		Tcl_WrongNumArgs (interp, 1, objv, "new_oid name");
 		return TCL_ERROR;
 	    }
