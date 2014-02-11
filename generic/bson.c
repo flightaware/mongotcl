@@ -25,13 +25,6 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 
         key = bson_iterator_key (&i);
 
-	/*
-        for (temp=0; temp<=depth; temp++) {
-            bson_printf( "\t" );
-	}
-        bson_printf( "%s : %d \t " , key , t );
-	*/
-
         switch (t) {
         case BSON_DOUBLE:
 	    append_list_type_object (interp, listObj, "double", Tcl_NewDoubleObj (bson_iterator_double (&i)));
@@ -58,16 +51,20 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
             append_list_type_object (interp, listObj, "date", Tcl_NewLongObj ((long) bson_iterator_date(&i)));
             break;
 
-        case BSON_BINDATA:
-            bson_printf( "BSON_BINDATA" );
+        case BSON_BINDATA: {
+	    unsigned char *bindata = (unsigned char *)bson_iterator_bin_data (&i);
+	    int binlen = bson_iterator_bin_len (&i);
+
+	    append_list_type_object (interp, listObj, "bin", Tcl_NewByteArrayObj (bindata, binlen));
             break;
+	}
 
         case BSON_UNDEFINED:
-            bson_printf( "BSON_UNDEFINED" );
+	    Tcl_ListObjAppendElement (interp, listObj, Tcl_NewStringObj ("undefined", -1));
             break;
 
         case BSON_NULL:
-            bson_printf( "BSON_NULL" );
+	    Tcl_ListObjAppendElement (interp, listObj, Tcl_NewStringObj ("null", -1));
             break;
 
         case BSON_REGEX:
@@ -121,7 +118,6 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 	    append_list_type_object (interp, listObj, "unknown", Tcl_NewIntObj (t));
             break;
         }
-        bson_printf( "\n" );
     }
     return listObj;
 }
@@ -271,6 +267,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	"start_object",
 	"finish_object",
 	"new_oid",
+	"to_list",
 	"finish",
 	"print",
         NULL
@@ -293,6 +290,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_APPEND_START_OBJECT,
         OPT_APPEND_FINISH_OBJECT,
 	OPT_APPEND_NEW_OID,
+	OPT_TO_LIST,
         OPT_FINISH,
 	OPT_PRINT
     };
@@ -607,6 +605,11 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    if (bson_append_new_oid (bd->bson, Tcl_GetString (objv[++arg])) != BSON_OK) {
 		return mongotcl_setBsonError (interp, bd->bson);
 	    }
+	    break;
+	  }
+
+	  case OPT_TO_LIST: {
+	    Tcl_SetObjResult (interp, mongotcl_bsontolist(interp, bd->bson));
 	    break;
 	  }
 
