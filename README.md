@@ -182,7 +182,9 @@ There's a compile warning on this.  It's probably coredump.
 
 Removes a document from a MongoDB server.  bson is the bson query.
 
-* $mongo cursor
+* $mongo cursor $name
+
+Create a cursor for this MongoDB connection.
 
 * $mongo find $namespace $bsonQuery $bsonFields $limit $skip $options
 
@@ -253,6 +255,54 @@ Drop a collection.
 * $mongo drop_db $db
 
 Drop a database.
+
+Cursor Methods
+---
+
+* $cursor init
+
+Initialize or reinitialize a cursor.  Cursors are automatically initialized upon creation.
+
+* $cursor set_query $bson
+
+Set a cursor's query with a configured bson object.
+
+* $cursor set_skip skipCount
+
+Set the cursor's skip count.
+
+* $cursor set_limit $limit
+
+Set a limit on the number of rows returned.
+
+* $cursor set_options optionList
+
+optonList contains a list zero or more elements:
+
+** tailable
+
+Cursor is tailable.
+
+** slave_ok
+
+Queries are allowed on non-primary nodes.
+
+** no_timeout
+
+Disable cursor timeouts.
+
+** await_data
+
+Momentarily block for more data.
+
+** exhaust
+
+Streem in multiple 'more' packages... (?)
+
+** partial
+
+Allow reads even if a shard is down.
+
 
 Example
 ---
