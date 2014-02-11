@@ -31,6 +31,9 @@ mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 extern int
 mongotcl_bsonObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objvp[]);
 
+extern int
+mongotcl_setMongoError (Tcl_Interp *interp, mongo *conn);
+
 typedef struct mongotcl_clientData
 {
     int mongo_magic;

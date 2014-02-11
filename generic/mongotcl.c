@@ -185,22 +185,142 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
       }
 
       case OPT_CURSOR_SET_QUERY: {
+	bson *bson;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "bson");
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	mongo_cursor_set_query (mc->cursor, bson);
+
 	break;
       }
 
       case OPT_CURSOR_SET_FIELDS: {
+	bson *bson;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "bson");
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	mongo_cursor_set_fields (mc->cursor, bson);
+
 	break;
       }
 
       case OPT_CURSOR_SET_SKIP: {
+	int skip;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "skip");
+	    return TCL_ERROR;
+	}
+	
+	if (Tcl_GetIntFromObj (interp, objv[2], &skip) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	mongo_cursor_set_skip (mc->cursor, skip);
 	break;
       }
 
       case OPT_CURSOR_SET_LIMIT: {
+	int limit;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "limit");
+	    return TCL_ERROR;
+	}
+	
+	if (Tcl_GetIntFromObj (interp, objv[2], &limit) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	mongo_cursor_set_limit (mc->cursor, limit);
 	break;
       }
 
       case OPT_CURSOR_SET_OPTIONS: {
+	int listObjc;
+	int cursorFlags;
+	int i;
+	Tcl_Obj **listObjv;
+
+	static CONST char *subOptions[] = {
+	    "tailable",
+	    "slave_ok",
+	    "no_timeout",
+	    "exhaust",
+	    "partial",
+	    NULL
+	};
+
+	enum suboptions {
+	    SUBOPT_CURSOR_TAILABLE,
+	    SUBOPT_CURSOR_SLAVE_OK,
+	    SUBOPT_CURSOR_NO_TIMEOUT,
+	    SUBOPT_CURSOR_AWAIT_DATA,
+	    SUBOPT_CURSOR_EXHAUST,
+	    SUBOPT_CURSOR_PARTIAL
+	};
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "optionList");
+	    return TCL_ERROR;
+	}
+	
+
+	if (Tcl_ListObjGetElements (interp, objv[2], &listObjc, &listObjv) == TCL_ERROR) {
+	    Tcl_AddErrorInfo (interp, "while examining option list");
+	    return TCL_ERROR;
+	}
+
+	for (i = 0; i < listObjc; i++) {
+	    int suboptIndex;
+
+	    if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    switch ((enum suboptions)suboptIndex) {
+		case SUBOPT_CURSOR_TAILABLE:
+		    cursorFlags |= MONGO_TAILABLE;
+		    break;
+
+		case SUBOPT_CURSOR_SLAVE_OK:
+		    cursorFlags |= MONGO_SLAVE_OK;
+		    break;
+
+		case SUBOPT_CURSOR_NO_TIMEOUT:
+		    cursorFlags |= MONGO_NO_CURSOR_TIMEOUT;
+		    break;
+
+		case SUBOPT_CURSOR_AWAIT_DATA:
+		    cursorFlags |= MONGO_AWAIT_DATA;
+		    break;
+
+		case SUBOPT_CURSOR_EXHAUST:
+		    cursorFlags |= MONGO_EXHAUST;
+		    break;
+
+		case SUBOPT_CURSOR_PARTIAL:
+		    cursorFlags |= MONGO_PARTIAL;
+		    break;
+	    }
+
+	    mongo_cursor_set_options (mc->cursor, cursorFlags);
+	}
+
 	break;
       }
 
@@ -209,13 +329,16 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
       }
 
       case OPT_CURSOR_BSON: {
+	mongo_cursor_bson (mc->cursor);
 	break;
       }
 
       case OPT_CURSOR_NEXT: {
+	if (mongo_cursor_next (mc->cursor) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, mc->conn);
+	}
 	break;
       }
-
     }
 
     return TCL_OK;
