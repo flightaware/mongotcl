@@ -457,6 +457,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "reconnect",
         "disconnect",
         "check_connection",
+	"write_concern",
         "replica_set_init",
         "replica_set_add_seed",
         "replica_set_client",
@@ -484,6 +485,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	OPT_RECONNECT,
 	OPT_DISCONNECT,
 	OPT_CHECK_CONNECTION,
+	OPT_WRITE_CONCERN,
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
         OPT_REPLICA_SET_CLIENT,
@@ -585,6 +587,73 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
 	break;
       }
+
+      case OPT_WRITE_CONCERN: {
+	int   suboptIndex;
+	int   arg;
+
+	static CONST char *subOptions[] = {
+	    "ignore_errors",
+	    "unacknowledged",
+	    "acknowledged",
+	    "replica_acknowledged",
+	    "journaled",
+	    NULL
+	};
+
+	enum suboptions {
+	    SUBOPT_IGNORE,
+	    SUBOPT_UNACKNOWLEDGED,
+	    SUBOPT_ACKNOWLEDGED,
+	    SUBOPT_REPLICA_ACKNOWLEDGED,
+	    SUBOPT_JOURNALED
+	};
+
+	if (objc < 3) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "concern_type ?concern_type?");
+	    return TCL_ERROR;
+	}
+
+	mongo_write_concern_init (md->write_concern);
+
+	for (arg = 2; arg < objc; arg++) {
+
+	    if (Tcl_GetIndexFromObj (interp, objv[arg], subOptions, "updateType", TCL_EXACT, &suboptIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    switch ((enum suboptions)suboptIndex) {
+		case SUBOPT_IGNORE: {
+		    md->write_concern->w = -1;
+		    break;
+		}
+
+		case SUBOPT_UNACKNOWLEDGED: {
+		    md->write_concern->w = 1;
+		    break;
+		}
+
+		case SUBOPT_ACKNOWLEDGED: {
+		    md->write_concern->w = 2;
+		    break;
+		}
+
+		case SUBOPT_REPLICA_ACKNOWLEDGED: {
+		    md->write_concern->j = 1;
+		    break;
+		}
+
+		case SUBOPT_JOURNALED: {
+		    md->write_concern->fsync = 1;
+		    break;
+		}
+	    }
+	}
+
+	mongo_write_concern_finish (md->write_concern);
+	break;
+      }
+
 
       case OPT_INSERT_BATCH: {
 	bson **bsonList;
@@ -732,7 +801,6 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
         break;
       }
-
 
       case OPT_COUNT: {
         bson *query;
@@ -1103,8 +1171,13 @@ mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
     md->conn = (mongo *)ckalloc(sizeof(mongo));
     md->interp = interp;
     md->mongo_magic = MONGOTCL_MONGO_MAGIC;
+    md->write_concern = (mongo_write_concern *)ckalloc(sizeof(mongo_write_concern));
 
     mongo_init (md->conn);
+
+    mongo_write_concern_init (md->write_concern);
+    md->write_concern->w = 1;
+    mongo_write_concern_finish (md->write_concern);
 
     commandName = Tcl_GetString (objv[2]);
 

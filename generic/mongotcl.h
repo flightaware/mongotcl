@@ -37,6 +37,7 @@ typedef struct mongotcl_clientData
     Tcl_Interp *interp;
     mongo *conn;
     Tcl_Command cmdToken;
+    mongo_write_concern *write_concern;
 } mongotcl_clientData;
 
 typedef struct mongotcl_bsonClientData
