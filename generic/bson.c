@@ -4,8 +4,9 @@
 #include <assert.h>
 
 static void
-append_list_type_object (Tcl_Interp *interp, Tcl_Obj *listObj, char *type, Tcl_Obj *object) {
+append_list_type_object (Tcl_Interp *interp, Tcl_Obj *listObj, char *type, const char *key, Tcl_Obj *object) {
     Tcl_ListObjAppendElement (interp, listObj, Tcl_NewStringObj (type, -1));
+    Tcl_ListObjAppendElement (interp, listObj, Tcl_NewStringObj (key, -1));
     Tcl_ListObjAppendElement (interp, listObj, object);
 }
 
@@ -24,59 +25,68 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
             break;
 
         key = bson_iterator_key (&i);
-	append_list_type_object (interp, listObj, "key", Tcl_NewStringObj (key, -1));
 
         switch (t) {
-        case BSON_DOUBLE:
-	    append_list_type_object (interp, listObj, "double", Tcl_NewDoubleObj (bson_iterator_double (&i)));
+        case BSON_DOUBLE: {
+	    append_list_type_object (interp, listObj, "double", key, Tcl_NewDoubleObj (bson_iterator_double (&i)));
             break;
+	}
 
-        case BSON_STRING:
-            append_list_type_object (interp, listObj, "string", Tcl_NewStringObj (bson_iterator_string (&i), -1));
+        case BSON_STRING: {
+            append_list_type_object (interp, listObj, "string", key, Tcl_NewStringObj (bson_iterator_string (&i), -1));
             break;
+	}
 
-        case BSON_SYMBOL:
-            append_list_type_object (interp, listObj, "symbol", Tcl_NewStringObj (bson_iterator_string (&i), -1));
+        case BSON_SYMBOL: {
+            append_list_type_object (interp, listObj, "symbol", key, Tcl_NewStringObj (bson_iterator_string (&i), -1));
             break;
+	}
 
-        case BSON_OID:
+        case BSON_OID: {
             bson_oid_to_string( bson_iterator_oid( &i ), oidhex );
-            append_list_type_object (interp, listObj, "oid", Tcl_NewStringObj (oidhex, -1));
+            append_list_type_object (interp, listObj, "oid", key, Tcl_NewStringObj (oidhex, -1));
             break;
+	}
 
-        case BSON_BOOL:
-	    append_list_type_object (interp, listObj, "bool", Tcl_NewBooleanObj (bson_iterator_bool (&i)));
+        case BSON_BOOL: {
+	    append_list_type_object (interp, listObj, "bool", key, Tcl_NewBooleanObj (bson_iterator_bool (&i)));
             break;
+	}
 
-        case BSON_DATE:
-            append_list_type_object (interp, listObj, "date", Tcl_NewLongObj ((long) bson_iterator_date(&i)));
+        case BSON_DATE: {
+            append_list_type_object (interp, listObj, "date", key, Tcl_NewLongObj ((long) bson_iterator_date(&i)));
             break;
+	}
 
         case BSON_BINDATA: {
 	    unsigned char *bindata = (unsigned char *)bson_iterator_bin_data (&i);
 	    int binlen = bson_iterator_bin_len (&i);
 
-	    append_list_type_object (interp, listObj, "bin", Tcl_NewByteArrayObj (bindata, binlen));
+	    append_list_type_object (interp, listObj, "bin", key, Tcl_NewByteArrayObj (bindata, binlen));
             break;
 	}
 
-        case BSON_UNDEFINED:
-	    Tcl_ListObjAppendElement (interp, listObj, Tcl_NewStringObj ("undefined", -1));
+        case BSON_UNDEFINED: {
+	    append_list_type_object (interp, listObj, "undefined", key, Tcl_NewObj ());
             break;
+	}
 
-        case BSON_NULL:
-	    Tcl_ListObjAppendElement (interp, listObj, Tcl_NewStringObj ("null", -1));
+        case BSON_NULL: {
+	    append_list_type_object (interp, listObj, "null", key, Tcl_NewObj ());
             break;
+	}
 
-        case BSON_REGEX:
-	    append_list_type_object (interp, listObj, "regex", Tcl_NewStringObj (bson_iterator_regex (&i), -1));
+        case BSON_REGEX: {
+	    append_list_type_object (interp, listObj, "regex", key, Tcl_NewStringObj (bson_iterator_regex (&i), -1));
             break;
+	}
 
-        case BSON_CODE:
-	    append_list_type_object (interp, listObj, "code", Tcl_NewStringObj (bson_iterator_code (&i), -1));
+        case BSON_CODE: {
+	    append_list_type_object (interp, listObj, "code", key, Tcl_NewStringObj (bson_iterator_code (&i), -1));
             break;
+	}
 
-        case BSON_CODEWSCOPE:
+        case BSON_CODEWSCOPE: {
             bson_printf( "BSON_CODE_W_SCOPE: %s", bson_iterator_code( &i ) );
             /* bson_init( &scope ); */ /* review - stepped on by bson_iterator_code_scope? */
             bson_iterator_code_scope( &i, &scope );
@@ -84,20 +94,23 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
             bson_print( &scope );
             /* bson_destroy( &scope ); */ /* review - causes free error */
             break;
+	}
 
-        case BSON_INT:
-	    append_list_type_object (interp, listObj, "int", Tcl_NewIntObj (bson_iterator_int (&i)));
+        case BSON_INT: {
+	    append_list_type_object (interp, listObj, "int", key, Tcl_NewIntObj (bson_iterator_int (&i)));
             break;
+	}
 
-        case BSON_LONG:
-	    append_list_type_object (interp, listObj, "long", Tcl_NewLongObj ((uint64_t)bson_iterator_long (&i)));
+        case BSON_LONG: {
+	    append_list_type_object (interp, listObj, "long", key, Tcl_NewLongObj ((uint64_t)bson_iterator_long (&i)));
             break;
+	}
 
         case BSON_TIMESTAMP: {
 	    char string[64];
             ts = bson_iterator_timestamp (&i);
             snprintf(string, sizeof(string), "%d:%d", ts.i, ts.t);
-            append_list_type_object (interp, listObj, "timestamp", Tcl_NewStringObj (bson_iterator_string (&i), -1));
+            append_list_type_object (interp, listObj, "timestamp", key, Tcl_NewStringObj (bson_iterator_string (&i), -1));
             break;
 	}
 
@@ -105,7 +118,7 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 	    Tcl_Obj *subList = Tcl_NewObj ();
 
 	    subList = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
-	    append_list_type_object (interp, listObj, "array", subList);
+	    append_list_type_object (interp, listObj, "array", key, subList);
 	    break;
 	}
 
@@ -113,12 +126,12 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 	    Tcl_Obj *subList = Tcl_NewObj ();
 
 	    subList = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
-	    append_list_type_object (interp, listObj, "object", subList);
+	    append_list_type_object (interp, listObj, "object", key, subList);
 	    break;
 	}
 
         default:
-	    append_list_type_object (interp, listObj, "unknown", Tcl_NewIntObj (t));
+	    append_list_type_object (interp, listObj, "unknown", key, Tcl_NewIntObj (t));
             break;
         }
     }
