@@ -103,14 +103,14 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
         case BSON_ARRAY: {
 	    Tcl_Obj *subList = Tcl_NewObj ();
 
-	    subList = mongotcl_bsontolist_raw (interp, subList, data, depth);
+	    subList = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
 	    append_list_type_object (interp, listObj, "array", subList);
 	}
 
         case BSON_OBJECT: {
 	    Tcl_Obj *subList = Tcl_NewObj ();
 
-	    subList = mongotcl_bsontolist_raw (interp, subList, data, depth);
+	    subList = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
 	    append_list_type_object (interp, listObj, "object", subList);
 	}
 
@@ -190,7 +190,7 @@ mongotcl_setBsonError (Tcl_Interp *interp, bson *bson) {
     }
 
     if (bson->err & BSON_ALREADY_FINISHED) {
-	Tcl_AddErrorInfo (interp, "bson already finished");
+	Tcl_SetObjResult (interp, Tcl_NewStringObj ("bson already finished", -1));
 	Tcl_ListObjAppendElement (interp, list, Tcl_NewStringObj("ALREADY_FINISHED",-1));
     }
 
