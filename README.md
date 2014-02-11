@@ -232,11 +232,7 @@ Example
 ---
 
 ```tcl
-    $bson init
-    $bson new_oid _id
-    $bson string "name" "Joe"
-    $bson int "age" 33
-    $bson finish
+    $bson init new_oid _id string "name" "Joe" int "age" 33 finish
 
     $mongo insert "tutorial.persons" $bson
 ```
