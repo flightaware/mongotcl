@@ -451,6 +451,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "init",
 	"last_error",
 	"prev_error",
+	"remove",
 	"create_index",
         "set_op_timeout",
         "client",
@@ -479,6 +480,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_INIT,
 	OPT_GET_LAST_ERROR,
 	OPT_GET_PREV_ERROR,
+	OPT_REMOVE,
         OPT_CREATE_INDEX,
         OPT_SET_OP_TIMEOUT,
         OPT_CLIENT,
@@ -520,7 +522,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    return TCL_ERROR;
 	}
 
-	if (mongo_insert (md->conn, Tcl_GetString(objv[2]), bson, 0) != MONGO_OK) {
+	if (mongo_insert (md->conn, Tcl_GetString(objv[2]), bson, md->write_concern) != MONGO_OK) {
 	    return mongotcl_setMongoError (interp, md->conn);
 	}
 
@@ -581,11 +583,30 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 		break;
 	}
 
-	if (mongo_update (md->conn, Tcl_GetString(objv[2]), condBson, opBson, updateType, 0) != MONGO_OK) {
+	if (mongo_update (md->conn, Tcl_GetString(objv[2]), condBson, opBson, updateType, md->write_concern) != MONGO_OK) {
 	    return mongotcl_setMongoError (interp, md->conn);
 	}
 
 	break;
+      }
+
+      case OPT_REMOVE: {
+	bson *bson;
+
+	if (objc != 4) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bson");
+	    return TCL_ERROR;
+	}
+
+	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (mongo_remove (md->conn, Tcl_GetString(objv[2]), bson, md->write_concern) != MONGO_OK) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+
+	  break;
       }
 
       case OPT_WRITE_CONCERN: {
@@ -602,7 +623,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	};
 
 	enum suboptions {
-	    SUBOPT_IGNORE,
+	    SUBOPT_IGNORE_ERRORS,
 	    SUBOPT_UNACKNOWLEDGED,
 	    SUBOPT_ACKNOWLEDGED,
 	    SUBOPT_REPLICA_ACKNOWLEDGED,
@@ -623,7 +644,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    }
 
 	    switch ((enum suboptions)suboptIndex) {
-		case SUBOPT_IGNORE: {
+		case SUBOPT_IGNORE_ERRORS: {
 		    md->write_concern->w = -1;
 		    break;
 		}
@@ -680,7 +701,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    }
 	}
 
-	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, NULL, 0) != MONGO_OK) {
+	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, md->write_concern, 0) != MONGO_OK) {
 	    return mongotcl_setMongoError (interp, md->conn);
 	}
 
