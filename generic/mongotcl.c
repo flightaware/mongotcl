@@ -951,16 +951,25 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
       case OPT_COUNT: {
         bson *query;
+	int count;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db collection");
+	if (objc < 4 || objc > 5) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "db collection ?bson?");
 	    return TCL_ERROR;
 	}
 
-	if (mongo_count (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), query) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
+	if (objc == 4) {
+	    query = NULL;
+	} else {
+	    if (mongotcl_cmdNameObjToBson (interp, objv[3], &query) == TCL_ERROR) {
 		return mongotcl_setMongoError (interp, md->conn);
+	    }
 	}
+
+	if ((count = mongo_count (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), query)) == MONGO_ERROR) {
+	    return mongotcl_setMongoError (interp, md->conn);
+	}
+	Tcl_SetObjResult (interp, Tcl_NewIntObj (count));
         break;
       }
 
