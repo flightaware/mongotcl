@@ -74,25 +74,33 @@ Append a key and value to the bson object.
 
 Append a key and value to the bson object where the value is a number.
 
-* bson double $key $value
+* $bson double $key $value
 
 Append a key and value to the bson object where the value is a double-precision floating point.
 
-* bson clock $key $epoch
+* $bson bool $key $value
 
-Append a key and epoch to the bson object.
+Append a key and a boolean value to the bson object.
 
-* bson null $key
+* $bson clock $key $epoch
+
+Append a key and epoch to the bson object.  Stored in milliseconds but program multiplies by 100.  Probably shouldn't and you should use clock clicks -milliseconds for current time.
+
+* $bson null $key
 
 Append a key and a null.
 
-* bson undefined $key
+* $bson undefined $key
 
 Append a key and an undefined.
 
 * $bson kvlist $list
 
 Import a list of key-value pairs.  Values are encoded as strings.  
+
+* $bson binary key type $binaryData
+
+Append a key and binary data.  Type can be ''generic'', ''function'', ''uuid'', ''md5'', ''user_defined''.
 
 Typical usage
 
@@ -101,10 +109,6 @@ Typical usage
 ```
 
 List must be contain an even number of elements.
-
-* $bson binary key type $binaryData
-
-Append a key and binary data.  Type can be ''generic'', ''function'', ''uuid'', ''md5'', ''user_defined''.
 
 * $bson bson key bsonObject
 
@@ -132,6 +136,14 @@ End a subobject.
 
 Finish the bson object.  I guess this rounds it out and completes it.
 
+* $bson new_oid $key
+
+Append a key and a bson-library-generated oid to the bson object.
+
+* $bson to_list
+
+Enumerate bson object as a list.
+
 * $bson print
 
 Print is for debugging only, it sort of shows you what's in the bson object.
@@ -156,11 +168,19 @@ Initialize or reinitialize the mongo object.  Like bson, it's initialize upon cr
 
 * $mongo insert $namespace $bson
 
+Insert the specified bson object in the database with the specified namespace.
+
 * $mongo update $namespace $condBson $opBson ?updateType?
+
+Update the specified bson object.  condBson is the update query in bson.  opBson is the bson update data.  The update type can be ''basic'', ''multi'', ''upsert''.  ''basic'' is used if update type isn't specified.
 
 * $mongo insert_batch $namespace $bsonObjectList
 
 There's a compile warning on this.  It's probably coredump.
+
+* $mongo remove $namespace $bson
+
+Removes a document from a MongoDB server.  bson is the bson query.
 
 * $mongo cursor
 
@@ -177,6 +197,12 @@ Return the last error.
 * $mongo prev_error $db
 
 Return the previous error.
+
+* $mongo write_concern concern_option ?concern_option?
+
+The write_concern method takes one or more options.  ''ignore_errors'' says to ignore errors.  ''unacknowledged'', the default, says to write unacknowledged, which ''acknowledged'' says to write acknowledged.
+
+In addition to the above options, which are one-of-three, ''replica_acknowledged'' adds that I guess a quorm of replicas have acknowledged the write, and ''journaled'' requires it to have been written to disk before the call returns.
 
 * $mongo create_index $namespace $keyBson $outBson ?optionList?
 
@@ -241,3 +267,4 @@ When you're done using the bson object, destroy it by doing a
 
     rename $bson ""
 
+When you're done using the mongodb object, destroy it similarly.
