@@ -359,6 +359,10 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    key = Tcl_GetString (objv[++arg]);
 
 	    if (Tcl_GetIntFromObj (interp, objv[++arg], &num) == TCL_ERROR) {
+	      field_error:
+		Tcl_AddErrorInfo(interp, " while processing field '");
+		Tcl_AppendObjToErrorInfo (interp, objv[arg-1]);
+		Tcl_AddErrorInfo(interp, "'");
 		return TCL_ERROR;
 	    }
 
@@ -380,7 +384,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    key = Tcl_GetString (objv[++arg]);
 
 	    if (Tcl_GetDoubleFromObj (interp, objv[++arg], &num) == TCL_ERROR) {
-		return TCL_ERROR;
+		goto field_error;
 	    }
 
 	    if (bson_append_double (bd->bson, key, num) != BSON_OK) {
@@ -401,7 +405,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    key = Tcl_GetString (objv[++arg]);
 
 	    if (Tcl_GetBooleanFromObj (interp, objv[++arg], &bool) == TCL_ERROR) {
-		return TCL_ERROR;
+		goto field_error;
 	    }
 
 	    if (bson_append_bool (bd->bson, key, bool) != BSON_OK) {
@@ -422,7 +426,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 	    key = Tcl_GetString (objv[++arg]);
 
 	    if (Tcl_GetLongFromObj (interp, objv[++arg], &clock) == TCL_ERROR) {
-		return TCL_ERROR;
+		goto field_error;
 	    }
 
 	    if (bson_append_time_t (bd->bson, key, (time_t)clock) != BSON_OK) {
