@@ -55,30 +55,30 @@ mongotcl_setCursorError (Tcl_Interp *interp, mongo_cursor *cursor) {
     char *errorCode = NULL;
 
     switch (cursor->err) {
-	case MONGO_CURSOR_EXHAUSTED: {
-	    errorCode = "CURSOR_EXHAUSTED";
-	    break;
-	}
+		case MONGO_CURSOR_EXHAUSTED: {
+			errorCode = "CURSOR_EXHAUSTED";
+			break;
+		}
 
-	case MONGO_CURSOR_INVALID: {
-	    errorCode = "CURSOR_INVALID";
-	    break;
-	}
+		case MONGO_CURSOR_INVALID: {
+			errorCode = "CURSOR_INVALID";
+			break;
+		}
 
-	case MONGO_CURSOR_PENDING: {
-	    errorCode = "CURSOR_PENDING";
-	    break;
-	}
+		case MONGO_CURSOR_PENDING: {
+			errorCode = "CURSOR_PENDING";
+			break;
+		}
 
-	case MONGO_CURSOR_QUERY_FAIL: {
-	    errorCode = "CURSOR_QUERY_FAIL";
-	    break;
-	}
+		case MONGO_CURSOR_QUERY_FAIL: {
+			errorCode = "CURSOR_QUERY_FAIL";
+			break;
+		}
 
-	case MONGO_CURSOR_BSON_ERROR: {
-	    errorCode = "CURSOR_BSON_ERROR";
-	    break;
-	}
+		case MONGO_CURSOR_BSON_ERROR: {
+			errorCode = "CURSOR_BSON_ERROR";
+			break;
+		}
     }
 
     Tcl_SetErrorCode (interp, "MONGO", errorCode, NULL);
@@ -103,12 +103,12 @@ mongotcl_cmdNameObjToCursor (Tcl_Interp *interp, Tcl_Obj *commandNameObj, mongo_
     Tcl_CmdInfo	cmdInfo;
 
     if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     if (cmdInfo.objClientData == NULL || ((mongotcl_cursorClientData *)cmdInfo.objClientData)->cursor_magic != MONGOTCL_CURSOR_MAGIC) {
-	Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a mongo cursor object", NULL);
-	return TCL_ERROR;
+		Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a mongo cursor object", NULL);
+		return TCL_ERROR;
     }
 
     *cursor = ((mongotcl_cursorClientData *)cmdInfo.objClientData)->cursor;
@@ -140,10 +140,10 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
         "set_fields",
         "set_skip",
         "set_limit",
-	"set_options",
-	"data",
-	"bson",
-	"next",
+		"set_options",
+		"data",
+		"bson",
+		"next",
         NULL
     };
 
@@ -155,7 +155,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
         OPT_CURSOR_SET_LIMIT,
         OPT_CURSOR_SET_OPTIONS,
         OPT_CURSOR_DATA,
-	OPT_CURSOR_BSON,
+		OPT_CURSOR_BSON,
         OPT_CURSOR_NEXT
     };
 
@@ -165,184 +165,189 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
         return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
-	TCL_EXACT, &optIndex) != TCL_OK) {
-	return TCL_ERROR;
+    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option", TCL_EXACT, &optIndex) != TCL_OK) {
+		return TCL_ERROR;
     }
 
-    switch ((enum options) optIndex) {
-      case OPT_CURSOR_INIT: {
-	char *ns;
+	switch ((enum options) optIndex) {
+		case OPT_CURSOR_INIT: {
+			char *ns;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace");
+				return TCL_ERROR;
+			}
 
-	ns = Tcl_GetString (objv[2]);
-	mongo_cursor_init (mc->cursor, mc->conn, ns);
-	break;
-      }
+			ns = Tcl_GetString (objv[2]);
+			mongo_cursor_init (mc->cursor, mc->conn, ns);
+			break;
+		}
 
-      case OPT_CURSOR_SET_QUERY: {
-	bson *bson;
+		case OPT_CURSOR_SET_QUERY: {
+			bson *bson;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "bson");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "bson");
+				return TCL_ERROR;
+			}
 
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	mongo_cursor_set_query (mc->cursor, bson);
+			mongo_cursor_set_query (mc->cursor, bson);
 
-	break;
-      }
+			break;
+		}
 
-      case OPT_CURSOR_SET_FIELDS: {
-	bson *bson;
+		case OPT_CURSOR_SET_FIELDS: {
+			bson *bson;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "bson");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "bson");
+				return TCL_ERROR;
+			}
 
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	mongo_cursor_set_fields (mc->cursor, bson);
+			mongo_cursor_set_fields (mc->cursor, bson);
 
-	break;
-      }
+			break;
+		}
 
-      case OPT_CURSOR_SET_SKIP: {
-	int skip;
+		case OPT_CURSOR_SET_SKIP: {
+			int skip;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "skip");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "skip");
+				return TCL_ERROR;
+			}
 	
-	if (Tcl_GetIntFromObj (interp, objv[2], &skip) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (Tcl_GetIntFromObj (interp, objv[2], &skip) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	mongo_cursor_set_skip (mc->cursor, skip);
-	break;
-      }
+			mongo_cursor_set_skip (mc->cursor, skip);
+			break;
+		}
 
-      case OPT_CURSOR_SET_LIMIT: {
-	int limit;
+		case OPT_CURSOR_SET_LIMIT: {
+			int limit;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "limit");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "limit");
+				return TCL_ERROR;
+			}
 	
-	if (Tcl_GetIntFromObj (interp, objv[2], &limit) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (Tcl_GetIntFromObj (interp, objv[2], &limit) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	mongo_cursor_set_limit (mc->cursor, limit);
-	break;
-      }
+			mongo_cursor_set_limit (mc->cursor, limit);
+			break;
+		}
 
-      case OPT_CURSOR_SET_OPTIONS: {
-	int listObjc;
-	int cursorFlags;
-	int i;
-	Tcl_Obj **listObjv;
+		case OPT_CURSOR_SET_OPTIONS: {
+			int listObjc;
+			int cursorFlags;
+			int i;
+			Tcl_Obj **listObjv;
 
-	static CONST char *subOptions[] = {
-	    "tailable",
-	    "slave_ok",
-	    "no_timeout",
-	    "exhaust",
-	    "partial",
-	    NULL
-	};
+			static CONST char *subOptions[] = {
+				"tailable",
+				"slave_ok",
+				"no_timeout",
+				"exhaust",
+				"partial",
+				NULL
+			};
 
-	enum suboptions {
-	    SUBOPT_CURSOR_TAILABLE,
-	    SUBOPT_CURSOR_SLAVE_OK,
-	    SUBOPT_CURSOR_NO_TIMEOUT,
-	    SUBOPT_CURSOR_AWAIT_DATA,
-	    SUBOPT_CURSOR_EXHAUST,
-	    SUBOPT_CURSOR_PARTIAL
-	};
+			enum suboptions {
+				SUBOPT_CURSOR_TAILABLE,
+				SUBOPT_CURSOR_SLAVE_OK,
+				SUBOPT_CURSOR_NO_TIMEOUT,
+				SUBOPT_CURSOR_AWAIT_DATA,
+				SUBOPT_CURSOR_EXHAUST,
+				SUBOPT_CURSOR_PARTIAL
+			};
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "optionList");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "optionList");
+				return TCL_ERROR;
+			}
 	
 
-	if (Tcl_ListObjGetElements (interp, objv[2], &listObjc, &listObjv) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while examining option list");
-	    return TCL_ERROR;
-	}
+			if (Tcl_ListObjGetElements (interp, objv[2], &listObjc, &listObjv) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while examining option list");
+				return TCL_ERROR;
+			}
 
-	for (i = 0; i < listObjc; i++) {
-	    int suboptIndex;
+			for (i = 0; i < listObjc; i++) {
+				int suboptIndex;
 
-	    if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+				if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
+					return TCL_ERROR;
+				}
 
-	    switch ((enum suboptions)suboptIndex) {
-		case SUBOPT_CURSOR_TAILABLE:
-		    cursorFlags |= MONGO_TAILABLE;
-		    break;
+				switch ((enum suboptions)suboptIndex) {
+					case SUBOPT_CURSOR_TAILABLE: {
+						cursorFlags |= MONGO_TAILABLE;
+						break;
+					}
 
-		case SUBOPT_CURSOR_SLAVE_OK:
-		    cursorFlags |= MONGO_SLAVE_OK;
-		    break;
+					case SUBOPT_CURSOR_SLAVE_OK: {
+						cursorFlags |= MONGO_SLAVE_OK;
+						break;
+					}
 
-		case SUBOPT_CURSOR_NO_TIMEOUT:
-		    cursorFlags |= MONGO_NO_CURSOR_TIMEOUT;
-		    break;
+					case SUBOPT_CURSOR_NO_TIMEOUT: {
+						cursorFlags |= MONGO_NO_CURSOR_TIMEOUT;
+						break;
+					}
 
-		case SUBOPT_CURSOR_AWAIT_DATA:
-		    cursorFlags |= MONGO_AWAIT_DATA;
-		    break;
+					case SUBOPT_CURSOR_AWAIT_DATA: {
+						cursorFlags |= MONGO_AWAIT_DATA;
+						break;
+					}
 
-		case SUBOPT_CURSOR_EXHAUST:
-		    cursorFlags |= MONGO_EXHAUST;
-		    break;
+					case SUBOPT_CURSOR_EXHAUST: {
+						cursorFlags |= MONGO_EXHAUST;
+						break;
+					}
 
-		case SUBOPT_CURSOR_PARTIAL:
-		    cursorFlags |= MONGO_PARTIAL;
-		    break;
-	    }
+					case SUBOPT_CURSOR_PARTIAL: {
+						cursorFlags |= MONGO_PARTIAL;
+						break;
+					}
+				}
 
-	    mongo_cursor_set_options (mc->cursor, cursorFlags);
-	}
+				mongo_cursor_set_options (mc->cursor, cursorFlags);
+			}
 
-	break;
-      }
+			break;
+		}
 
-      case OPT_CURSOR_DATA: {
-	break;
-      }
+		case OPT_CURSOR_DATA: {
+			break;
+		}
 
-      case OPT_CURSOR_BSON: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "bsonName");
-	    return TCL_ERROR;
-	}
+		case OPT_CURSOR_BSON: {
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "bsonName");
+				return TCL_ERROR;
+			}
 	
-	return mongotcl_create_bson_command (interp, Tcl_GetString (objv[2]), mongo_cursor_bson (mc->cursor));
-      }
+			return mongotcl_create_bson_command (interp, Tcl_GetString (objv[2]), mongo_cursor_bson (mc->cursor));
+		}
 
-      case OPT_CURSOR_NEXT: {
-	if (mongo_cursor_next (mc->cursor) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, mc->conn);
-	}
-	break;
-      }
+		case OPT_CURSOR_NEXT: {
+			if (mongo_cursor_next (mc->cursor) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, mc->conn);
+			}
+			break;
+		}
     }
 
     return TCL_OK;
@@ -422,99 +427,98 @@ mongotcl_setMongoError (Tcl_Interp *interp, mongo *conn) {
     char *errorString = NULL;
     char *errorCode = NULL;
 
-    switch (conn->err) {
-	case MONGO_CONN_SUCCESS: {
-	    return TCL_OK;
-	}
+	switch (conn->err) {
+		case MONGO_CONN_SUCCESS: {
+			return TCL_OK;
+		}
 
-	case MONGO_CONN_NO_SOCKET: {
-	    errorCode = "CONN_NO_SOCKET";
-	    break;
-	}
+		case MONGO_CONN_NO_SOCKET: {
+			errorCode = "CONN_NO_SOCKET";
+			break;
+		}
 
-	case MONGO_CONN_FAIL: {
-	    errorCode = "CONN_FAIL";
-	    break;
-	}
+		case MONGO_CONN_FAIL: {
+			errorCode = "CONN_FAIL";
+			break;
+		}
 
-	case MONGO_CONN_ADDR_FAIL: {
-	    errorCode = "CONN_ADDR_FAIL";
-	    break;
-	}
+		case MONGO_CONN_ADDR_FAIL: {
+			errorCode = "CONN_ADDR_FAIL";
+			break;
+		}
 
-	case MONGO_CONN_NOT_MASTER: {
-	    errorCode = "CONN_NOT_MASTER";
-	    break;
-	}
+		case MONGO_CONN_NOT_MASTER: {
+			errorCode = "CONN_NOT_MASTER";
+			break;
+		}
 
-	case MONGO_CONN_BAD_SET_NAME: {
-	    errorCode = "CONN_BAD_SET_NAME";
-	    break;
-	}
+		case MONGO_CONN_BAD_SET_NAME: {
+			errorCode = "CONN_BAD_SET_NAME";
+			break;
+		}
 
-	case MONGO_CONN_NO_PRIMARY: {
-	    errorCode = "CONN_NO_PRIMARY";
-	    break;
-	}
+		case MONGO_CONN_NO_PRIMARY: {
+			errorCode = "CONN_NO_PRIMARY";
+			break;
+		}
 
-	case MONGO_IO_ERROR: {
-	    errorCode = "CONN_IO_ERROR";
-	    break;
-	}
+		case MONGO_IO_ERROR: {
+			errorCode = "CONN_IO_ERROR";
+			break;
+		}
 
-	case MONGO_SOCKET_ERROR: {
-	    errorCode = "CONN_SOCKET_ERROR";
-	    break;
-	}
+		case MONGO_SOCKET_ERROR: {
+			errorCode = "CONN_SOCKET_ERROR";
+			break;
+		}
 
-	case MONGO_READ_SIZE_ERROR: {
-	    errorCode = "CONN_READ_SIZE_ERROR";
-	    break;
-	}
+		case MONGO_READ_SIZE_ERROR: {
+			errorCode = "CONN_READ_SIZE_ERROR";
+			break;
+		}
 
-	case MONGO_COMMAND_FAILED: {
-	    errorCode = "COMMAND_FAILED";
-	    break;
-	}
+		case MONGO_COMMAND_FAILED: {
+			errorCode = "COMMAND_FAILED";
+			break;
+		}
 
-	case MONGO_WRITE_ERROR: {
-	    errorCode = "WRITE_ERROR";
-	    break;
-	}
+		case MONGO_WRITE_ERROR: {
+			errorCode = "WRITE_ERROR";
+			break;
+		}
 
-	case MONGO_NS_INVALID: {
-	    errorCode = "NS_INVALID";
-	    break;
-	}
+		case MONGO_NS_INVALID: {
+			errorCode = "NS_INVALID";
+			break;
+		}
 
-	case MONGO_BSON_INVALID: {
-	    errorCode = "BSON_INVALID";
-	    break;
-	}
+		case MONGO_BSON_INVALID: {
+			errorCode = "BSON_INVALID";
+			break;
+		}
 
-	case MONGO_BSON_NOT_FINISHED: {
-	    errorCode = "BSON_NOT_FINISHED";
-	    break;
-	}
+		case MONGO_BSON_NOT_FINISHED: {
+			errorCode = "BSON_NOT_FINISHED";
+			break;
+		}
 
-	case MONGO_BSON_TOO_LARGE: {
-	    errorCode = "BSON_TOO_LARGE";
-	    break;
-	}
+		case MONGO_BSON_TOO_LARGE: {
+			errorCode = "BSON_TOO_LARGE";
+			break;
+		}
 
-	case MONGO_WRITE_CONCERN_INVALID: {
-	    errorCode = "WRITE_CONCERN_INVALID";
-	    break;
-	}
-
+		case MONGO_WRITE_CONCERN_INVALID: {
+			errorCode = "WRITE_CONCERN_INVALID";
+			break;
+		}
     }
 
     Tcl_SetErrorCode (interp, "MONGO", errorCode, NULL);
 
     if (*conn->errstr != '\0') {
-	errorString = conn->errstr;
+		errorString = conn->errstr;
     } else {
-	errorString = errorCode;
+		errorString = errorCode;
     }
 
     Tcl_SetObjResult (interp, Tcl_NewStringObj (errorString, -1));
@@ -565,27 +569,27 @@ int
 mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
     int         optIndex;
-    mongotcl_clientData *md = (mongotcl_clientData *)cData;
+	mongotcl_clientData *md = (mongotcl_clientData *)cData;
 
     static CONST char *options[] = {
         "insert",
         "update",
         "insert_batch",
         "cursor",
-	"find",
+		"find",
         "count",
         "init",
-	"last_error",
-	"prev_error",
-	"remove",
-	"create_index",
+		"last_error",
+		"prev_error",
+		"remove",
+		"create_index",
         "set_op_timeout",
         "client",
         "reconnect",
         "disconnect",
         "check_connection",
 		"is_master",
-	"write_concern",
+		"write_concern",
 		"run_command",
         "replica_set_init",
         "replica_set_add_seed",
@@ -603,29 +607,29 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_UPDATE,
         OPT_INSERT_BATCH,
         OPT_CURSOR,
-	OPT_MONGO_FIND,
-	OPT_COUNT,
+		OPT_MONGO_FIND,
+		OPT_COUNT,
         OPT_INIT,
-	OPT_GET_LAST_ERROR,
-	OPT_GET_PREV_ERROR,
-	OPT_REMOVE,
+		OPT_GET_LAST_ERROR,
+		OPT_GET_PREV_ERROR,
+		OPT_REMOVE,
         OPT_CREATE_INDEX,
         OPT_SET_OP_TIMEOUT,
         OPT_CLIENT,
-	OPT_RECONNECT,
-	OPT_DISCONNECT,
-	OPT_CHECK_CONNECTION,
-	OPT_IS_MASTER,
-	OPT_WRITE_CONCERN,
-	OPT_RUN_COMMAND,
+		OPT_RECONNECT,
+		OPT_DISCONNECT,
+		OPT_CHECK_CONNECTION,
+		OPT_IS_MASTER,
+		OPT_WRITE_CONCERN,
+		OPT_RUN_COMMAND,
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
         OPT_REPLICA_SET_CLIENT,
         OPT_CLEAR_ERRORS,
-	OPT_CMD_AUTHENTICATE,
-	OPT_CMD_ADD_USER,
-	OPT_CMD_DROP_COLLECTION,
-	OPT_CMD_DROP_DB,
+		OPT_CMD_AUTHENTICATE,
+		OPT_CMD_ADD_USER,
+		OPT_CMD_DROP_COLLECTION,
+		OPT_CMD_DROP_DB,
     };
 
     /* basic validation of command line arguments */
@@ -634,702 +638,708 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option",
-	TCL_EXACT, &optIndex) != TCL_OK) {
-	return TCL_ERROR;
+    if (Tcl_GetIndexFromObj (interp, objv[1], options, "option", TCL_EXACT, &optIndex) != TCL_OK) {
+		return TCL_ERROR;
     }
 
     switch ((enum options) optIndex) {
-      case OPT_INSERT: {
-	bson *bson;
+		case OPT_INSERT: {
+			bson *bson;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bson");
-	    return TCL_ERROR;
-	}
+			if (objc != 4) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace bson");
+				return TCL_ERROR;
+			}
 
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	if (mongo_insert (md->conn, Tcl_GetString(objv[2]), bson, md->write_concern) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
+			if (mongo_insert (md->conn, Tcl_GetString(objv[2]), bson, md->write_concern) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
 
-	  break;
-      }
-
-      case OPT_UPDATE: {
-	bson *condBson;
-	bson *opBson;
-	int   suboptIndex;
-	int   updateType;
-
-	static CONST char *subOptions[] = {
-	    "basic",
-	    "multi",
-	    "upsert",
-	    NULL
-	};
-
-	enum suboptions {
-	    SUBOPT_UPDATE_BASIC,
-	    SUBOPT_UPDATE_MULTI,
-	    SUBOPT_UPDATE_UPSERT
-	};
-
-	if (objc < 5 || objc > 6) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace condBson opBson ?updateType?");
-	    return TCL_ERROR;
-	}
-
-	if (objc == 5) {
-	    suboptIndex = SUBOPT_UPDATE_BASIC;
-	} else {
-	    if (Tcl_GetIndexFromObj (interp, objv[5], subOptions, "updateType", TCL_EXACT, &suboptIndex) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	}
-
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &condBson) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
-
-	if (mongotcl_cmdNameObjToBson (interp, objv[4], &opBson) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
-
-	switch ((enum suboptions)suboptIndex) {
-	    case SUBOPT_UPDATE_BASIC:
-		updateType = MONGO_UPDATE_BASIC;
-		break;
-
-	    case SUBOPT_UPDATE_MULTI:
-		updateType = MONGO_UPDATE_MULTI;
-		break;
-
-	    case SUBOPT_UPDATE_UPSERT:
-		updateType = MONGO_UPDATE_UPSERT;
-		break;
-	}
-
-	if (mongo_update (md->conn, Tcl_GetString(objv[2]), condBson, opBson, updateType, md->write_concern) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-
-	break;
-      }
-
-      case OPT_REMOVE: {
-	bson *bson;
-
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bson");
-	    return TCL_ERROR;
-	}
-
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
-
-	if (mongo_remove (md->conn, Tcl_GetString(objv[2]), bson, md->write_concern) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-
-	  break;
-      }
-
-      case OPT_WRITE_CONCERN: {
-	int   suboptIndex;
-	int   arg;
-
-	static CONST char *subOptions[] = {
-	    "ignore_errors",
-	    "unacknowledged",
-	    "acknowledged",
-	    "replica_acknowledged",
-	    "journaled",
-	    NULL
-	};
-
-	enum suboptions {
-	    SUBOPT_IGNORE_ERRORS,
-	    SUBOPT_UNACKNOWLEDGED,
-	    SUBOPT_ACKNOWLEDGED,
-	    SUBOPT_REPLICA_ACKNOWLEDGED,
-	    SUBOPT_JOURNALED
-	};
-
-	if (objc < 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "concern_type ?concern_type?");
-	    return TCL_ERROR;
-	}
-
-	mongo_write_concern_init (md->write_concern);
-
-	for (arg = 2; arg < objc; arg++) {
-
-	    if (Tcl_GetIndexFromObj (interp, objv[arg], subOptions, "updateType", TCL_EXACT, &suboptIndex) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-
-	    switch ((enum suboptions)suboptIndex) {
-		case SUBOPT_IGNORE_ERRORS: {
-		    md->write_concern->w = -1;
-		    break;
-		}
-
-		case SUBOPT_UNACKNOWLEDGED: {
-		    md->write_concern->w = 1;
-		    break;
-		}
-
-		case SUBOPT_ACKNOWLEDGED: {
-		    md->write_concern->w = 2;
-		    break;
-		}
-
-		case SUBOPT_REPLICA_ACKNOWLEDGED: {
-		    md->write_concern->j = 1;
-		    break;
-		}
-
-		case SUBOPT_JOURNALED: {
-		    md->write_concern->fsync = 1;
-		    break;
-		}
-	    }
-	}
-
-	mongo_write_concern_finish (md->write_concern);
-	break;
-      }
-
-	  case OPT_RUN_COMMAND: {
-		char *database;
-		bson *commandBson;
-		bson *outBson;
-
-		if (objc != 5) {
-			Tcl_WrongNumArgs (interp, 2, objv, "db commandBson outBson");
-			return TCL_ERROR;
-		}
-
-		database = Tcl_GetString(objv[2]);
-
-		if (mongotcl_cmdNameObjToBson (interp, objv[3], &commandBson) == TCL_ERROR) {
-			return TCL_ERROR;
-		}
-
-		if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
-			return TCL_ERROR;
-		}
-
-		if (mongo_run_command (md->conn, database, commandBson, outBson) != MONGO_OK) {
-			return mongotcl_setMongoError (interp, md->conn);
-		}
-
-	  	break;
-	  }
-
-
-      case OPT_INSERT_BATCH: {
-	bson **bsonList;
-	int listObjc;
-	int i;
-	Tcl_Obj **listObjv;
-	int flags = 0;
-
-	if (objc < 4 || objc > 5) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonList ?continue_on_error?");
-	    return TCL_ERROR;
-	}
-
-	if (objc == 5) {
-		if (strcmp (Tcl_GetString (objv[4]), "continue_on_error") != 0) {
-			Tcl_SetObjResult (interp, Tcl_NewStringObj ("fifth argument is not 'continue_on_error'", -1));
-			return TCL_ERROR;
-		}
-		flags = MONGO_CONTINUE_ON_ERROR;
-	}
-
-	/* retrieve the list of bson objects */
-	if (Tcl_ListObjGetElements (interp, objv[3], &listObjc, &listObjv) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while getting bson objects from list");
-	    return TCL_ERROR;
-	}
-
-	bsonList = (bson **)ckalloc (sizeof (bson *) * listObjc);
-
-	for (i = 0; i < listObjc; i++) {
-	    if (mongotcl_cmdNameObjToBson (interp, listObjv[i], &bsonList[i]) == TCL_ERROR) {
-		return TCL_ERROR;
-	    }
-	}
-
-	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, md->write_concern, flags) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-
-        break;
-      }
-
-      case OPT_CURSOR: {
-	char *commandName;
-
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "name");
-	    return TCL_ERROR;
-	}
-
-	commandName = Tcl_GetString(objv[2]);
-
-	return mongotcl_createCursorObjCmd(interp, md->conn, commandName);
-        break;
-      }
-
-      case OPT_MONGO_FIND: {
-	char *ns;
-	bson *bsonQuery;
-	bson *bsonFields;
-	int limit;
-	int skip;
-	int listObjc;
-	int i;
-	Tcl_Obj **listObjv;
-	int cursorFlags = 0;
-	mongo_cursor *cursor;
-
-	static CONST char *subOptions[] = {
-	    "tailable",
-	    "slave_ok",
-	    "no_timeout",
-	    "exhaust",
-	    "partial",
-	    NULL
-	};
-
-	enum suboptions {
-	    SUBOPT_CURSOR_TAILABLE,
-	    SUBOPT_CURSOR_SLAVE_OK,
-	    SUBOPT_CURSOR_NO_TIMEOUT,
-	    SUBOPT_CURSOR_AWAIT_DATA,
-	    SUBOPT_CURSOR_EXHAUST,
-	    SUBOPT_CURSOR_PARTIAL
-	};
-
-	if (objc != 8) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonQuery bsonFields limit skip options");
-	    return TCL_ERROR;
-	}
-
-	ns = Tcl_GetString (objv[2]);
-
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonQuery) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while locating query bson");
-	    return TCL_ERROR;
-	}
-
-	if (mongotcl_cmdNameObjToBson (interp, objv[4], &bsonFields) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while locating query bson");
-	    return TCL_ERROR;
-	}
-
-	if (Tcl_GetIntFromObj (interp, objv[5], &limit) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
-
-	if (Tcl_GetIntFromObj (interp, objv[6], &skip) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
-
-	if (Tcl_ListObjGetElements (interp, objv[7], &listObjc, &listObjv) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while examining option list");
-	    return TCL_ERROR;
-	}
-
-	for (i = 0; i < listObjc; i++) {
-	    int suboptIndex;
-
-	    if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-
-	    switch ((enum suboptions)suboptIndex) {
-		case SUBOPT_CURSOR_TAILABLE:
-		    cursorFlags |= MONGO_TAILABLE;
-		    break;
-
-		case SUBOPT_CURSOR_SLAVE_OK:
-		    cursorFlags |= MONGO_SLAVE_OK;
-		    break;
-
-		case SUBOPT_CURSOR_NO_TIMEOUT:
-		    cursorFlags |= MONGO_NO_CURSOR_TIMEOUT;
-		    break;
-
-		case SUBOPT_CURSOR_AWAIT_DATA:
-		    cursorFlags |= MONGO_AWAIT_DATA;
-		    break;
-
-		case SUBOPT_CURSOR_EXHAUST:
-		    cursorFlags |= MONGO_EXHAUST;
-		    break;
-
-		case SUBOPT_CURSOR_PARTIAL:
-		    cursorFlags |= MONGO_PARTIAL;
-		    break;
-	    }
-	}
-
-	if ((cursor = mongo_find (md->conn, ns, bsonQuery, bsonFields, limit, skip, cursorFlags)) == NULL) {
-	    return TCL_ERROR;
-	}
-
-        break;
-      }
-
-      case OPT_COUNT: {
-        bson *query;
-	int count;
-
-	if (objc < 4 || objc > 5) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db collection ?bson?");
-	    return TCL_ERROR;
-	}
-
-	if (objc == 4) {
-	    query = NULL;
-	} else {
-	    if (mongotcl_cmdNameObjToBson (interp, objv[3], &query) == TCL_ERROR) {
-		return mongotcl_setMongoError (interp, md->conn);
-	    }
-	}
-
-	if ((count = mongo_count (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), query)) == MONGO_ERROR) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-	Tcl_SetObjResult (interp, Tcl_NewIntObj (count));
-        break;
-      }
-
-      case OPT_INIT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "init");
-	    return TCL_ERROR;
-	}
-
-	mongo_init (md->conn);
-        break;
-      }
-
-      case OPT_GET_LAST_ERROR: {
-	bson *out;
-
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db");
-	    return TCL_ERROR;
-	}
-
-	if (mongo_cmd_get_last_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-
-        break;
-      }
-
-      case OPT_GET_PREV_ERROR: {
-	bson *out;
-
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db");
-	    return TCL_ERROR;
-	}
-
-	if (mongo_cmd_get_prev_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-
-        break;
-      }
-
-      case OPT_CREATE_INDEX: {
-	bson *keyBson;
-	bson *outBson;
-	int   suboptIndex;
-	int   updateFlags = 0;
-
-	static CONST char *subOptions[] = {
-	    "unique",
-	    "drop_dups",
-	    "background",
-	    "sparse",
-	    NULL
-	};
-
-	enum suboptions {
-	    SUBOPT_INDEX_UNIQUE,
-	    SUBOPT_INDEX_DROP_DUPS,
-	    SUBOPT_INDEX_BACKGROUND,
-	    SUBOPT_INDEX_SPARSE
-	};
-
-	if (objc < 5 || objc > 6) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace keyBson outBson ?optionList?");
-	    return TCL_ERROR;
-	}
-
-	/* set updatesFlags to 0.  If a list of updateFlags is present,
-	 * parse the list.  treat anything not found as an error,
-	 * set bitfields in the updateFlags variable according
-	 * to options specified.
-	 */
-	if (objc == 6) {
-	    int listObjc;
-	    int i;
-	    Tcl_Obj **listObjv;
-
-	    if (Tcl_ListObjGetElements (interp, objv[5], &listObjc, &listObjv) == TCL_ERROR) {
-		Tcl_AddErrorInfo (interp, "while examining option list");
-		return TCL_ERROR;
-	    }
-
-	    for (i = 0; i < listObjc; i++) {
-		if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-
-		switch ((enum suboptions)suboptIndex) {
-		    case SUBOPT_INDEX_UNIQUE:
-			updateFlags |= MONGO_INDEX_UNIQUE;
-			break;
-
-		    case SUBOPT_INDEX_DROP_DUPS:
-			updateFlags |= MONGO_INDEX_DROP_DUPS;
-			break;
-
-		    case SUBOPT_INDEX_BACKGROUND:
-			updateFlags |= MONGO_INDEX_BACKGROUND;
-			break;
-
-		    case SUBOPT_INDEX_SPARSE:
-			updateFlags |= MONGO_INDEX_SPARSE;
 			break;
 		}
-	    }
-	}
 
-	if (mongotcl_cmdNameObjToBson (interp, objv[3], &keyBson) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while locating key bson");
-	    return TCL_ERROR;
-	}
+		case OPT_UPDATE: {
+			bson *condBson;
+			bson *opBson;
+			int   suboptIndex;
+			int   updateType;
 
-	if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
-	    Tcl_AddErrorInfo (interp, "while locating ultson");
-	    return TCL_ERROR;
-	}
+			static CONST char *subOptions[] = {
+				"basic",
+				"multi",
+				"upsert",
+				NULL
+			};
 
-	if (mongo_create_index (md->conn, Tcl_GetString(objv[2]), keyBson, updateFlags, outBson) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
+			enum suboptions {
+				SUBOPT_UPDATE_BASIC,
+				SUBOPT_UPDATE_MULTI,
+				SUBOPT_UPDATE_UPSERT
+			};
 
-        break;
-      }
+			if (objc < 5 || objc > 6) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace condBson opBson ?updateType?");
+				return TCL_ERROR;
+			}
 
-      case OPT_SET_OP_TIMEOUT: {
-	int ms;
+			if (objc == 5) {
+				suboptIndex = SUBOPT_UPDATE_BASIC;
+			} else {
+				if (Tcl_GetIndexFromObj (interp, objv[5], subOptions, "updateType", TCL_EXACT, &suboptIndex) != TCL_OK) {
+					return TCL_ERROR;
+				}
+			}
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "timeoutMS");
-	    return TCL_ERROR;
-	}
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &condBson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[4], &opBson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			switch ((enum suboptions)suboptIndex) {
+				case SUBOPT_UPDATE_BASIC: {
+					updateType = MONGO_UPDATE_BASIC;
+					break;
+				}
+
+				case SUBOPT_UPDATE_MULTI: {
+					updateType = MONGO_UPDATE_MULTI;
+					break;
+				}
+
+				case SUBOPT_UPDATE_UPSERT: {
+					updateType = MONGO_UPDATE_UPSERT;
+					break;
+				}
+			}
+
+			if (mongo_update (md->conn, Tcl_GetString(objv[2]), condBson, opBson, updateType, md->write_concern) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+		case OPT_REMOVE: {
+			bson *bson;
+
+			if (objc != 4) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace bson");
+				return TCL_ERROR;
+			}
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (mongo_remove (md->conn, Tcl_GetString(objv[2]), bson, md->write_concern) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+		case OPT_WRITE_CONCERN: {
+			int   suboptIndex;
+			int   arg;
+
+			static CONST char *subOptions[] = {
+				"ignore_errors",
+				"unacknowledged",
+				"acknowledged",
+				"replica_acknowledged",
+				"journaled",
+				NULL
+			};
+
+			enum suboptions {
+				SUBOPT_IGNORE_ERRORS,
+				SUBOPT_UNACKNOWLEDGED,
+				SUBOPT_ACKNOWLEDGED,
+				SUBOPT_REPLICA_ACKNOWLEDGED,
+				SUBOPT_JOURNALED
+			};
+
+			if (objc < 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "concern_type ?concern_type?");
+				return TCL_ERROR;
+			}
+
+			mongo_write_concern_init (md->write_concern);
+
+			for (arg = 2; arg < objc; arg++) {
+
+				if (Tcl_GetIndexFromObj (interp, objv[arg], subOptions, "updateType", TCL_EXACT, &suboptIndex) != TCL_OK) {
+				return TCL_ERROR;
+				}
+
+				switch ((enum suboptions)suboptIndex) {
+					case SUBOPT_IGNORE_ERRORS: {
+						md->write_concern->w = -1;
+						break;
+					}
+
+					case SUBOPT_UNACKNOWLEDGED: {
+						md->write_concern->w = 1;
+						break;
+					}
+
+					case SUBOPT_ACKNOWLEDGED: {
+						md->write_concern->w = 2;
+						break;
+					}
+
+					case SUBOPT_REPLICA_ACKNOWLEDGED: {
+						md->write_concern->j = 1;
+						break;
+					}
+
+					case SUBOPT_JOURNALED: {
+						md->write_concern->fsync = 1;
+						break;
+					}
+				}
+			}
+
+			mongo_write_concern_finish (md->write_concern);
+			break;
+		}
+
+		case OPT_RUN_COMMAND: {
+			char *database;
+			bson *commandBson;
+			bson *outBson;
+
+			if (objc != 5) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db commandBson outBson");
+				return TCL_ERROR;
+			}
+
+			database = Tcl_GetString(objv[2]);
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &commandBson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (mongo_run_command (md->conn, database, commandBson, outBson) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+
+		case OPT_INSERT_BATCH: {
+			bson **bsonList;
+			int listObjc;
+			int i;
+			Tcl_Obj **listObjv;
+			int flags = 0;
+
+			if (objc < 4 || objc > 5) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonList ?continue_on_error?");
+				return TCL_ERROR;
+			}
+
+			if (objc == 5) {
+				if (strcmp (Tcl_GetString (objv[4]), "continue_on_error") != 0) {
+					Tcl_SetObjResult (interp, Tcl_NewStringObj ("fifth argument is not 'continue_on_error'", -1));
+					return TCL_ERROR;
+				}
+				flags = MONGO_CONTINUE_ON_ERROR;
+			}
+
+			/* retrieve the list of bson objects */
+			if (Tcl_ListObjGetElements (interp, objv[3], &listObjc, &listObjv) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while getting bson objects from list");
+				return TCL_ERROR;
+			}
+
+			bsonList = (bson **)ckalloc (sizeof (bson *) * listObjc);
+
+			for (i = 0; i < listObjc; i++) {
+				if (mongotcl_cmdNameObjToBson (interp, listObjv[i], &bsonList[i]) == TCL_ERROR) {
+					return TCL_ERROR;
+				}
+			}
+
+			if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, md->write_concern, flags) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+		case OPT_CURSOR: {
+			char *commandName;
+
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "name");
+				return TCL_ERROR;
+			}
+
+			commandName = Tcl_GetString(objv[2]);
+
+			return mongotcl_createCursorObjCmd(interp, md->conn, commandName);
+			break;
+		}
+
+		case OPT_MONGO_FIND: {
+			char *ns;
+			bson *bsonQuery;
+			bson *bsonFields;
+			int limit;
+			int skip;
+			int listObjc;
+			int i;
+			Tcl_Obj **listObjv;
+			int cursorFlags = 0;
+			mongo_cursor *cursor;
+
+			static CONST char *subOptions[] = {
+				"tailable",
+				"slave_ok",
+				"no_timeout",
+				"exhaust",
+				"partial",
+				NULL
+			};
+
+			enum suboptions {
+				SUBOPT_CURSOR_TAILABLE,
+				SUBOPT_CURSOR_SLAVE_OK,
+				SUBOPT_CURSOR_NO_TIMEOUT,
+				SUBOPT_CURSOR_AWAIT_DATA,
+				SUBOPT_CURSOR_EXHAUST,
+				SUBOPT_CURSOR_PARTIAL
+			};
+
+			if (objc != 8) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonQuery bsonFields limit skip options");
+				return TCL_ERROR;
+			}
+
+			ns = Tcl_GetString (objv[2]);
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonQuery) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while locating query bson");
+				return TCL_ERROR;
+			}
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[4], &bsonFields) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while locating query bson");
+				return TCL_ERROR;
+			}
+
+			if (Tcl_GetIntFromObj (interp, objv[5], &limit) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (Tcl_GetIntFromObj (interp, objv[6], &skip) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (Tcl_ListObjGetElements (interp, objv[7], &listObjc, &listObjv) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while examining option list");
+				return TCL_ERROR;
+			}
+
+			for (i = 0; i < listObjc; i++) {
+				int suboptIndex;
+
+				if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
+				return TCL_ERROR;
+				}
+
+				switch ((enum suboptions)suboptIndex) {
+				case SUBOPT_CURSOR_TAILABLE:
+					cursorFlags |= MONGO_TAILABLE;
+					break;
+
+				case SUBOPT_CURSOR_SLAVE_OK:
+					cursorFlags |= MONGO_SLAVE_OK;
+					break;
+
+				case SUBOPT_CURSOR_NO_TIMEOUT:
+					cursorFlags |= MONGO_NO_CURSOR_TIMEOUT;
+					break;
+
+				case SUBOPT_CURSOR_AWAIT_DATA:
+					cursorFlags |= MONGO_AWAIT_DATA;
+					break;
+
+				case SUBOPT_CURSOR_EXHAUST:
+					cursorFlags |= MONGO_EXHAUST;
+					break;
+
+				case SUBOPT_CURSOR_PARTIAL:
+					cursorFlags |= MONGO_PARTIAL;
+					break;
+				}
+			}
+
+			if ((cursor = mongo_find (md->conn, ns, bsonQuery, bsonFields, limit, skip, cursorFlags)) == NULL) {
+				return TCL_ERROR;
+			}
+
+			break;
+		}
+
+		case OPT_COUNT: {
+			bson *query;
+			int count;
+
+			if (objc < 4 || objc > 5) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db collection ?bson?");
+				return TCL_ERROR;
+			}
+
+			if (objc == 4) {
+				query = NULL;
+			} else {
+				if (mongotcl_cmdNameObjToBson (interp, objv[3], &query) == TCL_ERROR) {
+					return mongotcl_setMongoError (interp, md->conn);
+				}
+			}
+
+			if ((count = mongo_count (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), query)) == MONGO_ERROR) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			Tcl_SetObjResult (interp, Tcl_NewIntObj (count));
+			break;
+		}
+
+		case OPT_INIT: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "init");
+				return TCL_ERROR;
+			}
+
+			mongo_init (md->conn);
+			break;
+		}
+
+		case OPT_GET_LAST_ERROR: {
+			bson *out;
+
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db");
+				return TCL_ERROR;
+			}
+
+			if (mongo_cmd_get_last_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+		case OPT_GET_PREV_ERROR: {
+			bson *out;
+
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db");
+				return TCL_ERROR;
+			}
+
+			if (mongo_cmd_get_prev_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+		case OPT_CREATE_INDEX: {
+			bson *keyBson;
+			bson *outBson;
+			int   suboptIndex;
+			int   updateFlags = 0;
+
+			static CONST char *subOptions[] = {
+				"unique",
+				"drop_dups",
+				"background",
+				"sparse",
+				NULL
+			};
+
+			enum suboptions {
+				SUBOPT_INDEX_UNIQUE,
+				SUBOPT_INDEX_DROP_DUPS,
+				SUBOPT_INDEX_BACKGROUND,
+				SUBOPT_INDEX_SPARSE
+			};
+
+			if (objc < 5 || objc > 6) {
+				Tcl_WrongNumArgs (interp, 2, objv, "namespace keyBson outBson ?optionList?");
+				return TCL_ERROR;
+			}
+
+			/* set updatesFlags to 0.  If a list of updateFlags is present,
+			 * parse the list.  treat anything not found as an error,
+			 * set bitfields in the updateFlags variable according
+			 * to options specified.
+			 */
+			if (objc == 6) {
+				int listObjc;
+				int i;
+				Tcl_Obj **listObjv;
+
+				if (Tcl_ListObjGetElements (interp, objv[5], &listObjc, &listObjv) == TCL_ERROR) {
+					Tcl_AddErrorInfo (interp, "while examining option list");
+					return TCL_ERROR;
+				}
+
+				for (i = 0; i < listObjc; i++) {
+					if (Tcl_GetIndexFromObj (interp, listObjv[i], subOptions, "indexOption", TCL_EXACT, &suboptIndex) != TCL_OK) {
+						return TCL_ERROR;
+					}
+
+					switch ((enum suboptions)suboptIndex) {
+						case SUBOPT_INDEX_UNIQUE: {
+							updateFlags |= MONGO_INDEX_UNIQUE;
+							break;
+						}
+
+						case SUBOPT_INDEX_DROP_DUPS: {
+							updateFlags |= MONGO_INDEX_DROP_DUPS;
+							break;
+						}
+
+						case SUBOPT_INDEX_BACKGROUND: {
+							updateFlags |= MONGO_INDEX_BACKGROUND;
+							break;
+						}
+
+						case SUBOPT_INDEX_SPARSE: {
+							updateFlags |= MONGO_INDEX_SPARSE;
+							break;
+						}
+					}
+				}
+			}
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &keyBson) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while locating key bson");
+				return TCL_ERROR;
+			}
+
+			if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while locating ultson");
+				return TCL_ERROR;
+			}
+
+			if (mongo_create_index (md->conn, Tcl_GetString(objv[2]), keyBson, updateFlags, outBson) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+
+			break;
+		}
+
+		case OPT_SET_OP_TIMEOUT: {
+			int ms;
+
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "timeoutMS");
+				return TCL_ERROR;
+			}
 	
-	if (Tcl_GetIntFromObj (interp, objv[2], &ms) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (Tcl_GetIntFromObj (interp, objv[2], &ms) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	mongo_set_op_timeout (md->conn, ms);
-        break;
-      }
+			mongo_set_op_timeout (md->conn, ms);
+			break;
+		}
 
-      case OPT_CLIENT: {
-	char *address;
-	int port;
+		case OPT_CLIENT: {
+			char *address;
+			int port;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "address port");
-	    return TCL_ERROR;
-	}
+			if (objc != 4) {
+				Tcl_WrongNumArgs (interp, 2, objv, "address port");
+				return TCL_ERROR;
+			}
 
-	address = Tcl_GetString (objv[2]);
+			address = Tcl_GetString (objv[2]);
 	
-	if (Tcl_GetIntFromObj (interp, objv[3], &port) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (Tcl_GetIntFromObj (interp, objv[3], &port) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	if (mongo_client (md->conn, address, port) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-        break;
-      }
-
-      case OPT_RECONNECT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "reconnect");
-	    return TCL_ERROR;
-	}
-
-	mongo_reconnect (md->conn);
-        break;
-      }
-
-      case OPT_DISCONNECT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "disconnect");
-	    return TCL_ERROR;
-	}
-
-	mongo_disconnect (md->conn);
-        break;
-      }
-
-      case OPT_CHECK_CONNECTION: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "check_connection");
-	    return TCL_ERROR;
-	}
-
-	if (mongo_check_connection (md->conn) == MONGO_OK) {
-	    Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
-	} else {
-	    Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
-	}
-        break;
-      }
-
-      case OPT_IS_MASTER: {
-	  	bson *bsonResult;
-
-		if (objc != 3) {
-			Tcl_WrongNumArgs (interp, 1, objv, "is_master bsonResult");
-			return TCL_ERROR;
+			if (mongo_client (md->conn, address, port) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			break;
 		}
 
-		if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonResult) == TCL_ERROR) {
-			Tcl_AddErrorInfo (interp, "while locating bson result object");
-			return TCL_ERROR;
+		case OPT_RECONNECT: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "reconnect");
+				return TCL_ERROR;
+			}
+
+			mongo_reconnect (md->conn);
+			break;
+		  }
+
+		case OPT_DISCONNECT: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "disconnect");
+				return TCL_ERROR;
+			}
+
+			mongo_disconnect (md->conn);
+			break;
 		}
 
+		case OPT_CHECK_CONNECTION: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "check_connection");
+				return TCL_ERROR;
+			}
 
-		if (mongo_cmd_ismaster (md->conn, bsonResult) == MONGO_OK) {
-			Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
-		} else {
-			Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
+			if (mongo_check_connection (md->conn) == MONGO_OK) {
+				Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
+			} else {
+				Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
+			}
+			break;
 		}
 
-        break;
-      }
+		case OPT_IS_MASTER: {
+			bson *bsonResult;
 
-      case OPT_REPLICA_SET_INIT: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "setname");
-	    return TCL_ERROR;
-	}
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 1, objv, "is_master bsonResult");
+				return TCL_ERROR;
+			}
 
-	mongo_replica_set_init (md->conn, Tcl_GetString(objv[2]));
-        break;
-      }
+			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonResult) == TCL_ERROR) {
+				Tcl_AddErrorInfo (interp, "while locating bson result object");
+				return TCL_ERROR;
+			}
 
-      case OPT_REPLICA_SET_ADD_SEED: {
-	char *address;
-	int port;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "address port");
-	    return TCL_ERROR;
-	}
+			if (mongo_cmd_ismaster (md->conn, bsonResult) == MONGO_OK) {
+				Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
+			} else {
+				Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
+			}
 
-	address = Tcl_GetString (objv[2]);
+			break;
+		}
+
+		case OPT_REPLICA_SET_INIT: {
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "setname");
+				return TCL_ERROR;
+			}
+
+			mongo_replica_set_init (md->conn, Tcl_GetString(objv[2]));
+			break;
+		}
+
+		case OPT_REPLICA_SET_ADD_SEED: {
+			char *address;
+			int port;
+
+			if (objc != 4) {
+				Tcl_WrongNumArgs (interp, 2, objv, "address port");
+				return TCL_ERROR;
+			}
+
+			address = Tcl_GetString (objv[2]);
 	
-	if (Tcl_GetIntFromObj (interp, objv[3], &port) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+			if (Tcl_GetIntFromObj (interp, objv[3], &port) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
 
-	mongo_replica_set_add_seed (md->conn, address, port);
-        break;
-      }
+			mongo_replica_set_add_seed (md->conn, address, port);
+			break;
+		}
 
-      case OPT_REPLICA_SET_CLIENT: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "replica_set_client");
-	    return TCL_ERROR;
-	}
+		case OPT_REPLICA_SET_CLIENT: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "replica_set_client");
+				return TCL_ERROR;
+			}
 
-	if (mongo_replica_set_client (md->conn) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-        break;
-      }
+			if (mongo_replica_set_client (md->conn) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			break;
+		}
 
-      case OPT_CLEAR_ERRORS: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs (interp, 1, objv, "clear_errors");
-	    return TCL_ERROR;
-	}
+		case OPT_CLEAR_ERRORS: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "clear_errors");
+				return TCL_ERROR;
+			}
 
-	mongo_clear_errors (md->conn);
-        break;
-      }
+			mongo_clear_errors (md->conn);
+			break;
+		}
 
-      case OPT_CMD_AUTHENTICATE: {
-	if (objc != 5) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db user pass");
-	    return TCL_ERROR;
-	}
+		case OPT_CMD_AUTHENTICATE: {
+			if (objc != 5) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db user pass");
+				return TCL_ERROR;
+			}
 
-	if (mongo_cmd_authenticate (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), Tcl_GetString(objv[4])) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-        break;
-      }
+			if (mongo_cmd_authenticate (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), Tcl_GetString(objv[4])) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			break;
+		}
 
-      case OPT_CMD_ADD_USER: {
-	if (objc != 5) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db user pass");
-	    return TCL_ERROR;
-	}
+		case OPT_CMD_ADD_USER: {
+			if (objc != 5) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db user pass");
+				return TCL_ERROR;
+			}
 
-	if (mongo_cmd_add_user (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), Tcl_GetString(objv[4])) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-        break;
-      }
+			if (mongo_cmd_add_user (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), Tcl_GetString(objv[4])) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			break;
+		}
 
-      case OPT_CMD_DROP_COLLECTION: {
-	bson *out;
+		case OPT_CMD_DROP_COLLECTION: {
+			bson *out;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db collect");
-	    return TCL_ERROR;
-	}
+			if (objc != 4) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db collect");
+				return TCL_ERROR;
+			}
 
-	if (mongo_cmd_drop_collection (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), out) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-        break;
-      }
+			if (mongo_cmd_drop_collection (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), out) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			break;
+		}
 
-      case OPT_CMD_DROP_DB: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "db");
-	    return TCL_ERROR;
-	}
+		case OPT_CMD_DROP_DB: {
+			if (objc != 3) {
+				Tcl_WrongNumArgs (interp, 2, objv, "db");
+				return TCL_ERROR;
+			}
 
-	if (mongo_cmd_drop_db (md->conn, Tcl_GetString(objv[2])) != MONGO_OK) {
-	    return mongotcl_setMongoError (interp, md->conn);
-	}
-        break;
-      }
+			if (mongo_cmd_drop_db (md->conn, Tcl_GetString(objv[2])) != MONGO_OK) {
+				return mongotcl_setMongoError (interp, md->conn);
+			}
+			break;
+		}
     }
     return TCL_OK;
 }
@@ -1423,3 +1433,4 @@ mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
     return TCL_OK;
 }
 
+/* vim: set ts=4 sw=4 sts=4 noet : */

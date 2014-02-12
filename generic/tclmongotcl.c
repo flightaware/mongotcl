@@ -41,15 +41,15 @@ Mongo_Init(Tcl_Interp *interp)
      * which requires 8.1.
      */
     if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     if (Tcl_PkgRequire(interp, "Tcl", "8.1", 0) == NULL) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     if (Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION) != TCL_OK) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     namespace = Tcl_CreateNamespace (interp, "::mongo", NULL, NULL);
@@ -91,15 +91,15 @@ Mongo_SafeInit(Tcl_Interp *interp)
      * which requires 8.1.
      */
     if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     if (Tcl_PkgRequire(interp, "Tcl", "8.1", 0) == NULL) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     if (Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION) != TCL_OK) {
-	return TCL_ERROR;
+		return TCL_ERROR;
     }
 
     /* Create the mongo command  */
@@ -108,3 +108,4 @@ Mongo_SafeInit(Tcl_Interp *interp)
     return TCL_OK;
 }
 
+/* vim: set ts=4 sw=4 sts=4 noet : */
