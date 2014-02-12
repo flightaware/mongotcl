@@ -585,6 +585,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "disconnect",
         "check_connection",
 	"write_concern",
+		"run_command",
         "replica_set_init",
         "replica_set_add_seed",
         "replica_set_client",
@@ -614,6 +615,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	OPT_DISCONNECT,
 	OPT_CHECK_CONNECTION,
 	OPT_WRITE_CONCERN,
+	OPT_RUN_COMMAND,
         OPT_REPLICA_SET_INIT,
         OPT_REPLICA_SET_ADD_SEED,
         OPT_REPLICA_SET_CLIENT,
@@ -800,6 +802,33 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	mongo_write_concern_finish (md->write_concern);
 	break;
       }
+
+	  case OPT_RUN_COMMAND: {
+		char *database;
+		bson *commandBson;
+		bson *outBson;
+
+		if (objc != 5) {
+			Tcl_WrongNumArgs (interp, 2, objv, "db commandBson outBson");
+			return TCL_ERROR;
+		}
+
+		database = Tcl_GetString(objv[2]);
+
+		if (mongotcl_cmdNameObjToBson (interp, objv[3], &commandBson) == TCL_ERROR) {
+			return TCL_ERROR;
+		}
+
+		if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
+			return TCL_ERROR;
+		}
+
+		if (mongo_run_command (md->conn, database, commandBson, outBson) != MONGO_OK) {
+			return mongotcl_setMongoError (interp, md->conn);
+		}
+
+	  	break;
+	  }
 
 
       case OPT_INSERT_BATCH: {
