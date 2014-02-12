@@ -807,10 +807,19 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	int listObjc;
 	int i;
 	Tcl_Obj **listObjv;
+	int flags = 0;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonList");
+	if (objc < 4 || objc > 5) {
+	    Tcl_WrongNumArgs (interp, 2, objv, "namespace bsonList ?continue_on_error?");
 	    return TCL_ERROR;
+	}
+
+	if (objc == 5) {
+		if (strcmp (Tcl_GetString (objv[4]), "continue_on_error") != 0) {
+			Tcl_SetObjResult (interp, Tcl_NewStringObj ("fifth argument is not 'continue_on_error'", -1));
+			return TCL_ERROR;
+		}
+		flags = MONGO_CONTINUE_ON_ERROR;
 	}
 
 	/* retrieve the list of bson objects */
@@ -827,7 +836,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	    }
 	}
 
-	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, md->write_concern, 0) != MONGO_OK) {
+	if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, md->write_concern, flags) != MONGO_OK) {
 	    return mongotcl_setMongoError (interp, md->conn);
 	}
 
