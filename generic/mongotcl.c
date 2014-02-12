@@ -584,6 +584,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "reconnect",
         "disconnect",
         "check_connection",
+		"is_master",
 	"write_concern",
 		"run_command",
         "replica_set_init",
@@ -614,6 +615,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	OPT_RECONNECT,
 	OPT_DISCONNECT,
 	OPT_CHECK_CONNECTION,
+	OPT_IS_MASTER,
 	OPT_WRITE_CONCERN,
 	OPT_RUN_COMMAND,
         OPT_REPLICA_SET_INIT,
@@ -1202,6 +1204,29 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 	} else {
 	    Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
 	}
+        break;
+      }
+
+      case OPT_IS_MASTER: {
+	  	bson *bsonResult;
+
+		if (objc != 3) {
+			Tcl_WrongNumArgs (interp, 1, objv, "is_master bsonResult");
+			return TCL_ERROR;
+		}
+
+		if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonResult) == TCL_ERROR) {
+			Tcl_AddErrorInfo (interp, "while locating bson result object");
+			return TCL_ERROR;
+		}
+
+
+		if (mongo_cmd_ismaster (md->conn, bsonResult) == MONGO_OK) {
+			Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
+		} else {
+			Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
+		}
+
         break;
       }
 
