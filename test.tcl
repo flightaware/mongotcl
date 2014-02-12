@@ -8,12 +8,12 @@ m client 127.0.0.1 27017
 
 ::mongo::bson create b
 
-b init string "name" "Joe" int "age" 33 finish
+#b init string "name" "Joe" int "age" 33 finish
 
-b print
+#b print
 
-m insert "tutorial.persons" b
+#m insert "tutorial.persons" b
 
-puts "hi"
+#puts "hi"
 
 # vim: set ts=4 sw=4 sts=4 noet :

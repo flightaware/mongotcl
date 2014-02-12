@@ -1,4 +1,4 @@
-This is MongoTcl, a Tcl C extension providing an interface to the MongoDB C driver.
+MongoTcl, a Tcl C extension providing a Tcl interface to the MongoDB database
 ===
 
 MongoTcl provides a Tcl interface to the MongoDB C API.
@@ -36,8 +36,6 @@ MongoTcl provides three object creation commands...
 
 BSON object
 ---
-
-status: constructing bson is solid.  deconstructing it is untested to nonexistent.
 
 BSON stands for Binary JSON, is a binary-encoded serialization of JSON-like documents.  It has a JSON-like structure but is extended to support data types beyond the JSON spec, like it has a binary data type.
 

@@ -932,12 +932,12 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 			ns = Tcl_GetString (objv[2]);
 
 			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonQuery) == TCL_ERROR) {
-				Tcl_AddErrorInfo (interp, "while locating query bson");
+				Tcl_AddErrorInfo (interp, " while locating query bson");
 				return TCL_ERROR;
 			}
 
 			if (mongotcl_cmdNameObjToBson (interp, objv[4], &bsonFields) == TCL_ERROR) {
-				Tcl_AddErrorInfo (interp, "while locating query bson");
+				Tcl_AddErrorInfo (interp, " while locating query bson");
 				return TCL_ERROR;
 			}
 
@@ -1130,12 +1130,12 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 			}
 
 			if (mongotcl_cmdNameObjToBson (interp, objv[3], &keyBson) == TCL_ERROR) {
-				Tcl_AddErrorInfo (interp, "while locating key bson");
+				Tcl_AddErrorInfo (interp, " while locating key bson");
 				return TCL_ERROR;
 			}
 
 			if (mongotcl_cmdNameObjToBson (interp, objv[4], &outBson) == TCL_ERROR) {
-				Tcl_AddErrorInfo (interp, "while locating ultson");
+				Tcl_AddErrorInfo (interp, " while locating ultson");
 				return TCL_ERROR;
 			}
 
@@ -1226,7 +1226,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 			}
 
 			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonResult) == TCL_ERROR) {
-				Tcl_AddErrorInfo (interp, "while locating bson result object");
+				Tcl_AddErrorInfo (interp, " while locating bson result object");
 				return TCL_ERROR;
 			}
 
