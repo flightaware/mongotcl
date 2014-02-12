@@ -253,6 +253,40 @@ mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson **b
 /*
  *----------------------------------------------------------------------
  *
+ * mongotcl_cmdNameObjSetBson --
+ *
+ *    Take a command name and a pointer to a bson structure, find the Tcl 
+ *    command info structure, confirm it's bson, destroy the old bson
+ *    structure there and point the command to the passed-in bson
+ *    structure.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+mongotcl_cmdNameObjSetBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *newBson) {
+    Tcl_CmdInfo	cmdInfo;
+    mongotcl_bsonClientData *bd;
+
+    if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
+		return TCL_ERROR;
+    }
+
+    if (cmdInfo.objClientData == NULL || ((mongotcl_bsonClientData *)cmdInfo.objClientData)->bson_magic != MONGOTCL_BSON_MAGIC) {
+		Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a bson object", NULL);
+		return TCL_ERROR;
+    }
+
+    bd = (mongotcl_bsonClientData *)cmdInfo.objClientData;
+
+    bson_destroy(bd->bson);
+	bd->bson = newBson;
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * mongotcl_bsonObjectObjCmd --
  *
  *    dispatches the subcommands of a bson object command

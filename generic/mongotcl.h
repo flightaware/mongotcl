@@ -12,11 +12,11 @@
 
 #define MONGO_HAVE_STDINT
 
-#define MONGOTCL_BSON_MAGIC 0xf33df00d
+#define MONGOTCL_BSON_MAGIC 0xf33df007
 
-#define MONGOTCL_MONGO_MAGIC 0xf33dd00d
+#define MONGOTCL_MONGO_MAGIC 0xf33db007
 
-#define MONGOTCL_CURSOR_MAGIC 0xf33dc00c
+#define MONGOTCL_CURSOR_MAGIC 0xf33dc007
 
 #include <mongo.h>
 
@@ -24,6 +24,9 @@
 
 extern int
 mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson **bson);
+
+extern int
+mongotcl_cmdNameObjSetBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *newBson);
 
 extern int
 mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objvp[]);
