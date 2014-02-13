@@ -346,7 +346,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 
 		case OPT_CURSOR_NEXT: {
 			if (mongo_cursor_next (mc->cursor) != MONGO_OK) {
-				return mongotcl_setMongoError (interp, mc->conn);
+				return mongotcl_setCursorError (interp, mc->cursor);
 			}
 			break;
 		}

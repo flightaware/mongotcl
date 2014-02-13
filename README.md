@@ -180,7 +180,7 @@ There's a compile warning on this.  It's probably coredump.
 
 Removes a document from a MongoDB server.  bson is the bson query.
 
-* $mongo cursor name
+* $mongo cursor name namespace
 
 Create a cursor for this MongoDB connection.  Name is the name of the object created.  If name is #auto, a unique name will be automatically generated and returned.
 
@@ -366,5 +366,14 @@ This is a little gross and is going to be simplified, but...
 	$cursor next
 
 	$cursor to_list
+```
 
+* Perform a complex query
 
+```tcl
+	bson create query
+	query init start_object \$query int age 24 finish_object start_object \$orderby int name 1 finish_object finish
+
+	$cursor init $namespace
+	$cursor set_query $query
+```
