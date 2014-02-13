@@ -345,8 +345,14 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 		}
 
 		case OPT_CURSOR_NEXT: {
-			if (mongo_cursor_next (mc->cursor) != MONGO_OK) {
-				return mongotcl_setCursorError (interp, mc->cursor);
+			if (mongo_cursor_next (mc->cursor) == MONGO_OK) {
+				Tcl_SetObjResult (interp, Tcl_NewBooleanObj (1));
+			} else {
+				if (mc->cursor->err == MONGO_CURSOR_EXHAUSTED) {
+					Tcl_SetObjResult (interp, Tcl_NewBooleanObj (0));
+				} else {
+					return mongotcl_setCursorError (interp, mc->cursor);
+				}
 			}
 			break;
 		}

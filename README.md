@@ -267,7 +267,9 @@ Initialize or reinitialize a cursor.
 
 * $cursor next
 
-Move the cursor to the next row.
+Move the cursor to the next row.  Returns true if there is a next row, false if the cursor is exhausted.  
+
+Any error condition (CURSOR_INVALID, CURSOR_PENDING, CURSOR_QUERY_FAIL, CURSOR_BSON_ERROR), it generates a Tcl error and sets the error code to a list consisting of MONGO and the aforementioned condition code.
 
 * $cursor to_list
 
