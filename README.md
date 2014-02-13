@@ -353,4 +353,18 @@ To build the same index in the bacground, append the '''background''' option to 
 
 ```tcl
 	$mongo create_index daystream.controlstream $keyBson $bsonResult background
-``
+```
+
+* search
+
+This is a little gross and is going to be simplified, but...
+
+```tcl
+
+	set cursor [$mongo cursor #auto daystream.controlstream]
+
+	$cursor next
+
+	$cursor to_list
+
+

@@ -103,10 +103,11 @@ mongotcl_cmdNameObjToCursor (Tcl_Interp *interp, Tcl_Obj *commandNameObj, mongo_
     Tcl_CmdInfo	cmdInfo;
 
     if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
-		return TCL_ERROR;
+		goto lookup_error;
     }
 
     if (cmdInfo.objClientData == NULL || ((mongotcl_cursorClientData *)cmdInfo.objClientData)->cursor_magic != MONGOTCL_CURSOR_MAGIC) {
+	  lookup_error:
 		Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a mongo cursor object", NULL);
 		return TCL_ERROR;
     }
@@ -387,6 +388,7 @@ mongotcl_createCursorObjCmd(Tcl_Interp *interp, mongo *conn, char *commandName, 
     mc->interp = interp;
     mc->conn = conn;
     mc->cursor = (mongo_cursor *)ckalloc(sizeof(mongo_cursor));
+	mc->cursor_magic = MONGOTCL_CURSOR_MAGIC;
 
 	mongo_cursor_init (mc->cursor, conn, namespace);
 
