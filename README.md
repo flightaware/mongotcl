@@ -322,6 +322,8 @@ Set what fields are returned.  bson is a bson object containing the fields.  Exp
 Example
 ---
 
+* create a bson object and insert it into a MongoDB database
+
 ```tcl
     $bson init new_oid _id string "name" "Joe" int "age" 33 finish
 
@@ -330,6 +332,25 @@ Example
 
 When you're done using the bson object, destroy it by doing a
 
+```tcl
     rename $bson ""
+```
 
 When you're done using the mongodb object, destroy it similarly.
+
+* create an index on a MongoDB namespace
+
+```tcl
+	set keyBson [::mongo::bson create #auto]
+	$keyBson init int flight_id 1 finish
+	set resultBson [::mongo::bson create #auto]
+	$mongo create_index daystream.controlstream $keyBson $bsonResult
+```
+
+The bson result object can be examined for the status.
+
+To build the same index in the bacground, append the '''background''' option to the command:
+
+```tcl
+	$mongo create_index daystream.controlstream $keyBson $bsonResult background
+``
