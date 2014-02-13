@@ -237,10 +237,11 @@ mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson **b
     Tcl_CmdInfo	cmdInfo;
 
     if (!Tcl_GetCommandInfo (interp, Tcl_GetString(commandNameObj), &cmdInfo)) {
-		return TCL_ERROR;
+		goto lookup_error;
     }
 
     if (cmdInfo.objClientData == NULL || ((mongotcl_bsonClientData *)cmdInfo.objClientData)->bson_magic != MONGOTCL_BSON_MAGIC) {
+	  lookup_error:
 		Tcl_AppendResult (interp, "Error: '", Tcl_GetString (commandNameObj), "' is not a bson object", NULL);
 		return TCL_ERROR;
     }
