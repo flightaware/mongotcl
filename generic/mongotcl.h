@@ -28,6 +28,10 @@ mongotcl_cmdNameObjToBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson **b
 extern int
 mongotcl_cmdNameObjSetBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *newBson);
 
+extern Tcl_Obj * 
+mongotcl_bsontolist(Tcl_Interp *interp, const bson *b);
+
+
 extern int
 mongotcl_mongoObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objvp[]);
 

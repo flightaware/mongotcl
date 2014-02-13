@@ -135,6 +135,8 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
     mongotcl_cursorClientData *mc = (mongotcl_cursorClientData *)cData;
 
     static CONST char *options[] = {
+		"next",
+		"to_list",
         "init",
         "set_query",
         "set_fields",
@@ -142,21 +144,19 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
         "set_limit",
 		"set_options",
 		"data",
-		"bson",
-		"next",
         NULL
     };
 
     enum options {
+        OPT_CURSOR_NEXT,
+		OPT_CURSOR_TO_LIST,
         OPT_CURSOR_INIT,
         OPT_CURSOR_SET_QUERY,
         OPT_CURSOR_SET_FIELDS,
         OPT_CURSOR_SET_SKIP,
         OPT_CURSOR_SET_LIMIT,
         OPT_CURSOR_SET_OPTIONS,
-        OPT_CURSOR_DATA,
-		OPT_CURSOR_BSON,
-        OPT_CURSOR_NEXT
+        OPT_CURSOR_DATA
     };
 
     /* basic validation of command line arguments */
@@ -333,13 +333,14 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 			break;
 		}
 
-		case OPT_CURSOR_BSON: {
-			if (objc != 3) {
-				Tcl_WrongNumArgs (interp, 2, objv, "bsonName");
+		case OPT_CURSOR_TO_LIST: {
+			if (objc != 2) {
+				Tcl_WrongNumArgs (interp, 1, objv, "to_list");
 				return TCL_ERROR;
 			}
 
-			return mongotcl_cmdNameObjSetBson (interp, objv[2], mongo_cursor_bson (mc->cursor));
+			Tcl_SetObjResult (interp, mongotcl_bsontolist (interp, mongo_cursor_bson (mc->cursor)));
+			break;
 		}
 
 		case OPT_CURSOR_NEXT: {

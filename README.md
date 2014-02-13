@@ -180,9 +180,9 @@ There's a compile warning on this.  It's probably coredump.
 
 Removes a document from a MongoDB server.  bson is the bson query.
 
-* $mongo cursor $name
+* $mongo cursor name
 
-Create a cursor for this MongoDB connection.
+Create a cursor for this MongoDB connection.  Name is the name of the object created.  If name is #auto, a unique name will be automatically generated and returned.
 
 * $mongo find $namespace $bsonQuery $bsonFields $limit $skip $options
 
@@ -228,6 +228,10 @@ Disconnect from the database.
 
 Check the database connection status.  Returns 0 or 1.
 
+* $mongo is_master ?bson?
+
+Return 1 if we are connected to the master, 0 otherwise.  bson, if present, is the name of a bson object that will receive detailed information about the database.
+
 * $mongo replica_set_init
 
 * $mongo replica_set_add_seed $address $port
@@ -257,9 +261,17 @@ Drop a database.
 Cursor Methods
 ---
 
-* $cursor init
+* $cursor init $namespace
 
-Initialize or reinitialize a cursor.  Cursors are automatically initialized upon creation.
+Initialize or reinitialize a cursor.
+
+* $cursor next
+
+Move the cursor to the next row.
+
+* $cursor to_list
+
+Return the bson object of the current row as a list.
 
 * $cursor set_query $bson
 
@@ -300,6 +312,11 @@ Streem in multiple 'more' packages... (?)
 ** partial
 
 Allow reads even if a shard is down.
+
+* $cursor set_fields bson
+
+Set what fields are returned.  bson is a bson object containing the fields.  Expect this to change to take a list of fields and make the bson object behind your back.
+
 
 
 Example
