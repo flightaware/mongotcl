@@ -820,23 +820,25 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
 		case OPT_IS_MASTER: {
 			bson *bsonResult;
+			int status = 0;
 
-			if (objc != 3) {
-				Tcl_WrongNumArgs (interp, 1, objv, "is_master bsonResult");
+			if (objc < 2 || objc > 3) {
+				Tcl_WrongNumArgs (interp, 1, objv, "is_master ?bsonResult?");
 				return TCL_ERROR;
 			}
 
-			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bsonResult) == TCL_ERROR) {
-				Tcl_AddErrorInfo (interp, " while locating bson result object");
-				return TCL_ERROR;
-			}
-
-
-			if (mongo_cmd_ismaster (md->conn, bsonResult) == MONGO_OK) {
-				Tcl_SetObjResult (interp, Tcl_NewIntObj(1));
+			if (objc == 2) {
+				status = mongo_cmd_ismaster (md->conn, NULL);
 			} else {
-				Tcl_SetObjResult (interp, Tcl_NewIntObj(0));
+				if (mongotcl_cmdNameObjToBson (interp, objv[2], &bsonResult) == TCL_ERROR) {
+					Tcl_AddErrorInfo (interp, " while locating bson result object");
+					return TCL_ERROR;
+				}
+
+				status = mongo_cmd_ismaster (md->conn, bsonResult);
 			}
+
+			Tcl_SetObjResult (interp, Tcl_NewBooleanObj (status));
 
 			break;
 		}
