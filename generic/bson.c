@@ -17,6 +17,11 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
     bson_timestamp_t ts;
     char oidhex[25];
     bson scope;
+
+	if (data == NULL) {
+		return listObj;
+	}
+
     bson_iterator_from_buffer(&i, data);
 
     while (bson_iterator_next (&i)) {
