@@ -483,15 +483,17 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
 		case OPT_CURSOR: {
 			char *commandName;
+			char *namespace;
 
-			if (objc != 3) {
-				Tcl_WrongNumArgs (interp, 2, objv, "name");
+			if (objc != 4) {
+				Tcl_WrongNumArgs (interp, 2, objv, "name namespace");
 				return TCL_ERROR;
 			}
 
 			commandName = Tcl_GetString(objv[2]);
+			namespace = Tcl_GetString(objv[3]);
 
-			return mongotcl_createCursorObjCmd(interp, md->conn, commandName);
+			return mongotcl_createCursorObjCmd(interp, md->conn, commandName, namespace);
 			break;
 		}
 
