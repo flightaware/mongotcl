@@ -315,9 +315,9 @@ Streem in multiple 'more' packages... (?)
 
 Allow reads even if a shard is down.
 
-* $cursor set_fields bson
+* $cursor set_fields fieldList
 
-Set what fields are returned.  bson is a bson object containing the fields.  Expect this to change to take a list of fields and make the bson object behind your back.
+Set what fields are returned.  fieldList is a list of field names with 1 or 0.  1 says to include the field, 0 says to exclude it.  The fieldList is sticky for future queries.  This may change.  See http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/ for how the 1/0 thing works.
 
 
 
