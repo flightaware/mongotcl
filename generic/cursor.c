@@ -32,6 +32,12 @@ mongotcl_cursorObjectDelete (ClientData clientData)
     assert (mc->cursor_magic == MONGOTCL_CURSOR_MAGIC);
 
     mongo_cursor_destroy(mc->cursor);
+
+	if (mc->fieldsBson != NULL) {
+		bson_destroy (mc->fieldsBson);
+		ckfree ((char *)mc->fieldsBson);
+	}
+
     ckfree((char *)mc->cursor);
     ckfree((char *)clientData);
 }
@@ -98,7 +104,7 @@ mongotcl_setCursorError (Tcl_Interp *interp, mongo_cursor *cursor) {
  *
  *----------------------------------------------------------------------
  */
-static int
+int
 mongotcl_cmdNameObjToCursor (Tcl_Interp *interp, Tcl_Obj *commandNameObj, mongo_cursor **cursor) {
     Tcl_CmdInfo	cmdInfo;
 
@@ -114,6 +120,68 @@ mongotcl_cmdNameObjToCursor (Tcl_Interp *interp, Tcl_Obj *commandNameObj, mongo_
 
     *cursor = ((mongotcl_cursorClientData *)cmdInfo.objClientData)->cursor;
     return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_tcllist_to_cursor_fields --
+ *
+ *      Takes a Tcl list that should contain pairs of field names and
+ *      0/1 values and a mongotcl cursor clientdata structure.
+ *
+ *      If successful, sets a bson object in the cursor client data to
+ *      contain the equivalent, appropriate bson for passing to 
+ *      mongo_cursor_set_fields
+ *
+ *      If unsuccessful, returns TCL_ERROR and sets the bson pointer
+ *      to NULL.
+ *
+ * Results:
+ *      A standard Tcl result.
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+int
+mongotcl_tcllist_to_cursor_fields (Tcl_Interp *interp, Tcl_Obj *fieldList, mongotcl_cursorClientData *mc) {
+	Tcl_Obj **listObjv;
+	int listObjc;
+	int i;
+
+	if (Tcl_ListObjGetElements (interp, fieldList, &listObjc, &listObjv) == TCL_ERROR) {
+		Tcl_AddErrorInfo (interp, "while reading field list");
+		return TCL_ERROR;
+	}
+
+	if (i & 1) {
+		Tcl_SetObjResult (interp, Tcl_NewStringObj ("field list must have even number of elements", -1));
+		return TCL_ERROR;
+	}
+
+	if (mc->fieldsBson == NULL) {
+		mc->fieldsBson = (bson *)ckalloc(sizeof(bson));
+	}
+	bson_init(mc->fieldsBson);
+
+	for (i = 0; i < listObjc; i += 2) {
+		int want;
+		char *key = Tcl_GetString (listObjv[i]);
+
+		if (Tcl_GetIntFromObj (interp, listObjv[i+1], &want) == TCL_ERROR) {
+		  error:
+			bson_destroy(mc->fieldsBson);
+			return TCL_ERROR;
+		}
+
+		if (bson_append_int (mc->fieldsBson, key, want) != BSON_OK) {
+			Tcl_SetObjResult (interp, Tcl_NewStringObj ("bson error while generating field list", -1));
+			goto error;
+		}
+	}
+
+	return TCL_OK;
 }
 
 
@@ -202,20 +270,12 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 		}
 
 		case OPT_CURSOR_SET_FIELDS: {
-			bson *bson;
-
 			if (objc != 3) {
-				Tcl_WrongNumArgs (interp, 2, objv, "bson");
+				Tcl_WrongNumArgs (interp, 2, objv, "list");
 				return TCL_ERROR;
 			}
 
-			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
-				return TCL_ERROR;
-			}
-
-			mongo_cursor_set_fields (mc->cursor, bson);
-
-			break;
+			return mongotcl_tcllist_to_cursor_fields (interp, objv[2], mc);
 		}
 
 		case OPT_CURSOR_SET_SKIP: {
@@ -395,6 +455,7 @@ mongotcl_createCursorObjCmd(Tcl_Interp *interp, mongo *conn, char *commandName, 
     mc->conn = conn;
     mc->cursor = (mongo_cursor *)ckalloc(sizeof(mongo_cursor));
 	mc->cursor_magic = MONGOTCL_CURSOR_MAGIC;
+	mc->fieldsBson = NULL;
 
 	mongo_cursor_init (mc->cursor, conn, namespace);
 

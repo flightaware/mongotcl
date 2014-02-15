@@ -71,6 +71,7 @@ typedef struct mongotcl_cursorClientData
     Tcl_Interp *interp;
     mongo_cursor *cursor;
     Tcl_Command cmdToken;
+	bson *fieldsBson;
 } mongotcl_cursorClientData;
 
 /* vim: set ts=4 sw=4 sts=4 noet : */
