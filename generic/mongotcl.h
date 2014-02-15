@@ -45,6 +45,9 @@ extern int
 mongotcl_create_bson_command (Tcl_Interp *interp, char *commandName, CONST bson *bsonObj);
 
 extern int
+mongotcl_setBsonError (Tcl_Interp *interp, bson *bson);
+
+extern int
 mongotcl_createCursorObjCmd(Tcl_Interp *interp, mongo *conn, char *commandName, char *namespace); ;
 
 typedef struct mongotcl_clientData

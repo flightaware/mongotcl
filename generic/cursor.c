@@ -170,16 +170,20 @@ mongotcl_tcllist_to_cursor_fields (Tcl_Interp *interp, Tcl_Obj *fieldList, mongo
 		char *key = Tcl_GetString (listObjv[i]);
 
 		if (Tcl_GetIntFromObj (interp, listObjv[i+1], &want) == TCL_ERROR) {
-		  error:
-			bson_destroy(mc->fieldsBson);
-			return TCL_ERROR;
+		  bson_error:
+			return mongotcl_setBsonError (interp, mc->fieldsBson);
 		}
 
 		if (bson_append_int (mc->fieldsBson, key, want) != BSON_OK) {
-			Tcl_SetObjResult (interp, Tcl_NewStringObj ("bson error while generating field list", -1));
-			goto error;
+			goto bson_error;
 		}
 	}
+
+	if (bson_finish (mc->fieldsBson) != BSON_OK) {
+		goto bson_error;
+	}
+
+	mongo_cursor_set_fields (mc->cursor, mc->fieldsBson);
 
 	return TCL_OK;
 }
