@@ -177,6 +177,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "update",
         "insert_batch",
         "cursor",
+		"search",
 		"find",
         "count",
         "init",
@@ -208,6 +209,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         OPT_UPDATE,
         OPT_INSERT_BATCH,
         OPT_CURSOR,
+        OPT_SEARCH,
 		OPT_MONGO_FIND,
 		OPT_COUNT,
         OPT_INIT,
@@ -495,6 +497,24 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 
 			return mongotcl_createCursorObjCmd(interp, md->conn, commandName, namespace);
 			break;
+		}
+
+		case OPT_SEARCH: {
+			int i;
+			int result;
+			Tcl_Obj **searchObjv = (Tcl_Obj **)ckalloc(sizeof (Tcl_Obj *) * objc);
+
+			searchObjv[0] = Tcl_NewStringObj ("mongo::_search", -1);
+			Tcl_IncrRefCount (searchObjv[0]);
+			searchObjv[1] = objv[0];
+
+			for (i = 2; i < objc; i++) {
+				searchObjv[i] = objv[i];
+			}
+			result = Tcl_EvalObjv (interp, objc, searchObjv, 0);
+			Tcl_DecrRefCount (searchObjv[0]);
+			ckfree((char *)searchObjv);
+			return result;
 		}
 
 		case OPT_MONGO_FIND: {

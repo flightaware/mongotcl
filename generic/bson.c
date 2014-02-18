@@ -32,11 +32,11 @@ mongotcl_bsontolist_raw (Tcl_Interp *interp, Tcl_Obj *listObj, const char *data 
 
         key = bson_iterator_key (&i);
 
-        switch (t) {
+		switch (t) {
 			case BSON_DOUBLE: {
-			append_list_type_object (interp, listObj, "double", key, Tcl_NewDoubleObj (bson_iterator_double (&i)));
-            break;
-		}
+				append_list_type_object (interp, listObj, "double", key, Tcl_NewDoubleObj (bson_iterator_double (&i)));
+				break;
+			}
 
 			case BSON_STRING: {
 				append_list_type_object (interp, listObj, "string", key, Tcl_NewStringObj (bson_iterator_string (&i), -1));
@@ -151,6 +151,174 @@ mongotcl_bsontolist(Tcl_Interp *interp, const bson *b) {
     Tcl_Obj *listObj = Tcl_NewObj();
     return mongotcl_bsontolist_raw (interp, listObj, b->data , 0);
 }
+
+int
+mongotcl_bsontoarray_raw (Tcl_Interp *interp, char *arrayName, char *typeArrayName, const char *data , int depth) {
+    bson_iterator i;
+    const char *key;
+    bson_timestamp_t ts;
+    char oidhex[25];
+	Tcl_Obj *obj;
+	char *type;
+
+	if (data == NULL) {
+		return TCL_OK;
+	}
+
+    bson_iterator_from_buffer(&i, data);
+
+    while (bson_iterator_next (&i)) {
+        bson_type t = bson_iterator_type (&i);
+        if (t == 0) {
+            break;
+		}
+
+        key = bson_iterator_key (&i);
+
+        switch (t) {
+			case BSON_DOUBLE: {
+				obj = Tcl_NewDoubleObj (bson_iterator_double (&i));
+				type = "double";
+				break;
+		}
+
+			case BSON_SYMBOL: {
+				obj = Tcl_NewStringObj (bson_iterator_string (&i), -1);
+				type = "symbol";
+				break;
+			}
+
+			case BSON_STRING: {
+				obj = Tcl_NewStringObj (bson_iterator_string (&i), -1);
+				type = "string";
+				break;
+			}
+
+			case BSON_OID: {
+				bson_oid_to_string( bson_iterator_oid( &i ), oidhex );
+				obj = Tcl_NewStringObj (oidhex, -1);
+				type = "oid";
+				break;
+			}
+
+			case BSON_BOOL: {
+				obj = Tcl_NewBooleanObj (bson_iterator_bool (&i));
+				type = "bool";
+				break;
+			}
+
+			case BSON_DATE: {
+				obj = Tcl_NewLongObj ((long) bson_iterator_date(&i));
+				type = "date";
+				break;
+			}
+
+			case BSON_BINDATA: {
+				unsigned char *bindata = (unsigned char *)bson_iterator_bin_data (&i);
+				int binlen = bson_iterator_bin_len (&i);
+
+				obj = Tcl_NewByteArrayObj (bindata, binlen);
+				type = "bin";
+				break;
+			}
+
+			case BSON_UNDEFINED: {
+				obj = Tcl_NewObj ();
+				type = "undefined";
+				break;
+			}
+
+			case BSON_NULL: {
+				obj = Tcl_NewObj ();
+				type = "null";
+				break;
+			}
+
+			case BSON_REGEX: {
+				obj = Tcl_NewStringObj (bson_iterator_regex (&i), -1);
+				type = "regex";
+				break;
+			}
+
+			case BSON_CODE: {
+				obj = Tcl_NewStringObj (bson_iterator_code (&i), -1);
+				type = "code";
+				break;
+			}
+
+			case BSON_CODEWSCOPE: {
+				// bson_printf( "BSON_CODE_W_SCOPE: %s", bson_iterator_code( &i ) );
+				/* bson_init( &scope ); */ /* review - stepped on by bson_iterator_code_scope? */
+				// bson_iterator_code_scope( &i, &scope );
+				// bson_printf( "\n\t SCOPE: " );
+				// bson_print( &scope );
+				/* bson_destroy( &scope ); */ /* review - causes free error */
+				break;
+			}
+
+			case BSON_INT: {
+				obj = Tcl_NewIntObj (bson_iterator_int (&i));
+				type = "int";
+				break;
+			}
+
+			case BSON_LONG: {
+				obj = Tcl_NewLongObj ((uint64_t)bson_iterator_long (&i));
+				type = "long";
+				break;
+			}
+
+			case BSON_TIMESTAMP: {
+				char string[64];
+
+				ts = bson_iterator_timestamp (&i);
+				snprintf(string, sizeof(string), "%d:%d", ts.i, ts.t);
+				obj = Tcl_NewStringObj (bson_iterator_string (&i), -1);
+				type = "timestamp";
+				break;
+			}
+
+			case BSON_ARRAY: {
+				obj = Tcl_NewObj();
+				obj = mongotcl_bsontolist_raw (interp, obj, bson_iterator_value (&i), depth + 1);
+				type = "array";
+
+				break;
+			}
+
+			case BSON_OBJECT: {
+				Tcl_Obj *subList = Tcl_NewObj ();
+
+				obj = mongotcl_bsontolist_raw (interp, subList, bson_iterator_value (&i), depth + 1);
+				type = "object";
+				break;
+			}
+
+			default: {
+				obj = Tcl_NewIntObj (t);
+				type = "unknown";
+				break;
+			}
+		}
+
+		if (Tcl_SetVar2Ex (interp, arrayName, key, obj, TCL_LEAVE_ERR_MSG) == NULL) {
+			return TCL_ERROR;
+		}
+
+		if (typeArrayName != NULL) {
+			if (Tcl_SetVar2Ex (interp, typeArrayName, key, Tcl_NewStringObj (type, -1), TCL_LEAVE_ERR_MSG) == NULL) {
+				return TCL_ERROR;
+			}
+		}
+    }
+	return TCL_OK; 
+}
+
+int
+mongotcl_bsontoarray(Tcl_Interp *interp, char *arrayName, char *typeArrayName, const bson *b) {
+    return mongotcl_bsontoarray_raw (interp, arrayName, typeArrayName, b->data , 0);
+}
+
 
 
 /*
@@ -327,6 +495,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 		"finish_object",
 		"new_oid",
 		"to_list",
+		"to_array",
 		"finish",
 		"print",
 		NULL
@@ -350,6 +519,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_APPEND_FINISH_OBJECT,
 		OPT_APPEND_NEW_OID,
 		OPT_TO_LIST,
+		OPT_TO_ARRAY,
         OPT_FINISH,
 		OPT_PRINT
     };
@@ -684,6 +854,27 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 
 			case OPT_TO_LIST: {
 				Tcl_SetObjResult (interp, mongotcl_bsontolist(interp, bd->bson));
+				break;
+			}
+
+			case OPT_TO_ARRAY: {
+				char *arrayName;
+				char *typeArrayName;
+
+				if (objc < 3 || objc > 4) {
+					Tcl_WrongNumArgs (interp, 1, objv, "to_array arrayName ?typeArrayName?");
+					return TCL_ERROR;
+				}
+
+				arrayName = Tcl_GetString (objv[2]);
+
+				if (objc == 3) {
+					typeArrayName = NULL;
+				} else {
+					typeArrayName = Tcl_GetString (objv[3]);
+				}
+
+				return mongotcl_bsontoarray(interp, arrayName, typeArrayName, bd->bson);
 				break;
 			}
 

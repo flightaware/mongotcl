@@ -210,6 +210,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
     static CONST char *options[] = {
 		"next",
 		"to_list",
+		"to_array",
         "init",
         "set_query",
         "set_fields",
@@ -223,6 +224,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
     enum options {
         OPT_CURSOR_NEXT,
 		OPT_CURSOR_TO_LIST,
+		OPT_CURSOR_TO_ARRAY,
         OPT_CURSOR_INIT,
         OPT_CURSOR_SET_QUERY,
         OPT_CURSOR_SET_FIELDS,
@@ -406,6 +408,26 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 
 			Tcl_SetObjResult (interp, mongotcl_bsontolist (interp, mongo_cursor_bson (mc->cursor)));
 			break;
+		}
+
+		case OPT_CURSOR_TO_ARRAY: {
+			char *arrayName;
+			char *typeArrayName;
+
+			if (objc < 3 || objc > 4) {
+				Tcl_WrongNumArgs (interp, 1, objv, "to_array array ?typeArray?");
+				return TCL_ERROR;
+			}
+
+			arrayName = Tcl_GetString (objv[2]);
+
+			if (objc == 3) {
+				typeArrayName = NULL;
+			} else {
+				typeArrayName = Tcl_GetString (objv[3]);
+			}
+
+			return mongotcl_bsontoarray (interp, arrayName, typeArrayName, mongo_cursor_bson (mc->cursor));
 		}
 
 		case OPT_CURSOR_NEXT: {
