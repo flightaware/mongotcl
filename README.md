@@ -142,6 +142,12 @@ Append a key and a bson-library-generated oid to the bson object.
 
 Enumerate bson object as a list.
 
+* $bson to_array arrayName ?typeArrayName?
+
+Enumerate bson object as an array of key-value pairs.  Embedded bson arrays and objects are set to contain subordinate bson in list format.
+
+if typeArrayName is specified, for each key of the key-value pairs, an element is inserted into typeArray for the same key with the value being the name of the bson datatype such as int, double, string, oid, etc.
+
 * $bson print
 
 Print is for debugging only, it sort of shows you what's in the bson object.
@@ -275,6 +281,10 @@ Any error condition (CURSOR_INVALID, CURSOR_PENDING, CURSOR_QUERY_FAIL, CURSOR_B
 
 Return the bson object of the current row as a list.
 
+* $cursor to_array arrayName ?typeArrayName?
+
+Set an array and possibly typeArray similarly to bson to_array.
+
 * $cursor set_query $bson
 
 Set a cursor's query with a configured bson object.
@@ -319,6 +329,25 @@ Allow reads even if a shard is down.
 
 Set what fields are returned.  fieldList is a list of field names with 1 or 0.  1 says to include the field, 0 says to exclude it.  The fieldList is sticky for future queries.  This may change.  See http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/ for how the 1/0 thing works.
 
+
+Search
+---
+
+* $mongo search ?-namespace namespace? ?-fields fieldList? ?-array arrayName? ?-typearray typeArrayName? ?-list listVar? ?-offset offset? ?-limit limit?
+
+Create a cursor against the specified namespace.  
+
+* If -fields is present, fieldList is a list of fieldNames.  Fields returned are restricted to the named fields.  If a field name starts with a dash it indicates that that field is to be explicitly suppressed.
+
+* If -array is present, arrayName is the name of an array set in the caller's context containing elements for the fields of each row returned.
+
+* If -typearray is present it's the name of an array set in the caller's context containing elements for the field names of each row returned with the values being the bson data type.
+
+* If -list is present, the name of a variable that will receive the bson list.
+
+* If -offset is present, the first offset rows of the result are skipped.
+
+* If -limit is present it specifies the maximum number of rows that can be returned.
 
 
 Example
