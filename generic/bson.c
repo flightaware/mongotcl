@@ -784,7 +784,9 @@ mongotcl_arraytobson(Tcl_Interp *interp, Tcl_Obj *listObj, char *typeArrayName, 
 
 			// it is there, append element according to the type specified
 			// in the type array
-			return mongotcl_appendBsonFromObjects(interp, mybson, typeObj, key, valueObj);
+			if (mongotcl_appendBsonFromObjects(interp, mybson, typeObj, key, valueObj) != TCL_OK) {
+				return mongotcl_setBsonError (interp, mybson);
+			}
 		}
 	}
 
