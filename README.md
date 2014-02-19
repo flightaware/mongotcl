@@ -92,9 +92,34 @@ Append a key and a null.
 
 Append a key and an undefined.
 
-* $bson kvlist $list
+* $bson array_set $list ?typeArray?
 
-Import a list of key-value pairs.  Values are encoded as strings.  
+Import a list of key-value pairs.  Values are encoded as strings by default.
+
+If the typeArray is specified then for each field, see if the field can
+be found in the type array.  If it is found, the corresponding array element
+specifies the bson data type to be encoded, from the following list:
+
+* string
+* int
+* long
+* double
+* bool
+* clock
+* null
+* undefined
+* binary_generic
+* binary_function
+* binary_uuid
+* binary_md5
+* binary_user_defined
+* bson
+
+Example usage
+
+```tcl
+	$bson array_set [array get row] typeArray
+```
 
 * $bson binary key type $binaryData
 
