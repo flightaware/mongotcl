@@ -358,7 +358,7 @@ Set what fields are returned.  fieldList is a list of field names with 1 or 0.  
 Search
 ---
 
-* $mongo search ?-namespace namespace? ?-fields fieldList? ?-array arrayName? ?-typearray typeArrayName? ?-list listVar? ?-offset offset? ?-limit limit?
+* $mongo search ?-namespace namespace? ?-fields fieldList? ?-array arrayName? ?-typearray typeArrayName? ?-list listVar? ?-offset offset? ?-limit limit? ?-comparebson bson? ?-sort fieldList? ?-code code?
 
 Create a cursor against the specified namespace.  
 
@@ -373,6 +373,12 @@ Create a cursor against the specified namespace.
 * If -offset is present, the first offset rows of the result are skipped.
 
 * If -limit is present it specifies the maximum number of rows that can be returned.
+
+* If -comparebson is present it specifies a bson object that contains an encoded query to return only rows matching the query specification.
+
+* If -sort is present it contains a list of fields to sort by, from most significant to least significant.  if the first character of the field name is a dash that indicates sorting in reverse order.
+
+* If -code is present, it specifies a code body that is executed for each row returned
 
 
 Example
@@ -433,3 +439,10 @@ This is a little gross and is going to be simplified, but...
 	$cursor init $namespace
 	$cursor set_query $query
 ```
+
+Bugs
+---
+
+The code is currently early beta quality so there could be quite a few bugs including ones that trigger a coredump.
+
+There are almost for sure some memory leaks so until those are all tracked down expect long-running jobs' memory footprint to grow and plan accordingly.

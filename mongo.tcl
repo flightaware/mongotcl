@@ -58,6 +58,13 @@ proc _search {args} {
 				set limit $value
 			}
 
+			"-comparebson" {
+				set compareBson $value
+			}
+
+			"-sort" {
+				set sort $value
+			}
 
 			"-namespace" {
 				set namespace $value
@@ -95,7 +102,36 @@ proc _search {args} {
 		$cursor set_skip $offset
 	}
 
+	# generate the query
+	set queryBson [::mongo::bson create #auto]
+
+	if {[info exists compareBson]} {
+		$queryBson start_object {$query} bson $compareBson finish_object
+
+	}
+
+	# if there's a sort option, append it to the query
+	if {[info exists sort]} {
+		$queryBson start_object {$orderby}
+		foreach field $sort {
+			if {[string index $field 0] == "-"} {
+				$queryBson int [string range $field 1 end] 0
+			} else {
+				$queryBson int $field 1
+			}
+		}
+		$queryBson finish_object
+	}
+
+	$cursor set_query $queryBson
+
+	#
+	# iterate over the matching rows. 
+	# you have to invoke "next" to get the first row, by the way
+	#
 	while {[$cursor next]} {
+		# pull the data out of the row, get types too if a type array
+		# is specified
 		if {[info exists arrayName]} {
 			if {![info exists typeArrayName]} {
 				unset -nocomplain array
@@ -106,10 +142,12 @@ proc _search {args} {
 			}
 		}
 
+		# if they specified -list, give them their list of type triplets
 		if {[info exists listName]} {
 			set listVar [$cursor to_list]
 		}
 
+		# if they specified a code block, execute it
 		if {[info exists code]} {
 			uplevel $code
 		}
