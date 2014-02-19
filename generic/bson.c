@@ -319,7 +319,6 @@ mongotcl_bsontoarray(Tcl_Interp *interp, char *arrayName, char *typeArrayName, c
     return mongotcl_bsontoarray_raw (interp, arrayName, typeArrayName, b->data , 0);
 }
 
-
 
 /*
  *--------------------------------------------------------------
@@ -461,6 +460,301 @@ mongotcl_cmdNameObjSetBson (Tcl_Interp *interp, Tcl_Obj *commandNameObj, bson *n
 /*
  *----------------------------------------------------------------------
  *
+ * mongotcl_appendBsonFromObject --
+ *
+ *    Appends a Tcl object to a BSON object using the specified datatype
+ *
+ * Results:
+ *    stuff
+ *
+ *----------------------------------------------------------------------
+ */
+int
+mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, enum bson_binary_subtype_t bsonBinarySubtype, CONST char *key, Tcl_Obj *CONST valueObj) {
+	switch (bsonType) {
+		case BSON_STRING: {
+			char *value;
+
+			value = Tcl_GetString (valueObj);
+
+			if (bson_append_string (bs, key, value) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_INT: {
+			int num;
+
+			if (Tcl_GetIntFromObj (interp, valueObj, &num) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (bson_append_int (bs, key, num) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		  }
+
+		case BSON_LONG: {
+			long num;
+
+			if (Tcl_GetLongFromObj (interp, valueObj, &num) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (bson_append_long (bs, key, num) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		  }
+
+		case BSON_DOUBLE: {
+			double num;
+
+			if (Tcl_GetDoubleFromObj (interp, valueObj, &num) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (bson_append_double (bs, key, num) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_BOOL: {
+			int bool;
+
+			if (Tcl_GetBooleanFromObj (interp, valueObj, &bool) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (bson_append_bool (bs, key, bool) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_DATE: {
+			long clock;
+			if (Tcl_GetLongFromObj (interp, valueObj, &clock) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (bson_append_time_t (bs, key, (time_t)clock) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_NULL: {
+			if (bson_append_null (bs, key) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_UNDEFINED: {
+			if (bson_append_undefined (bs, key) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_BINDATA: {
+			unsigned char *binary;
+			int binaryLength;
+			int binaryType;
+
+			binary = Tcl_GetByteArrayFromObj (valueObj, &binaryLength);
+
+			if (bson_append_binary (bs, key, binaryType, (char *)binary, binaryLength) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		case BSON_OBJECT: {
+			bson *valBson;
+
+			if (mongotcl_cmdNameObjToBson (interp, valueObj, &valBson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			if (bson_append_bson (bs, key, valBson) != BSON_OK) {
+				return mongotcl_setBsonError (interp, bs);
+			}
+			break;
+		}
+
+		default: {
+			Tcl_SetObjResult (interp, Tcl_NewStringObj ("unknown or unimplement BSON type", -1));
+			return TCL_ERROR;
+		}
+	}
+	return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * mongotcl_appendBsonFromObject --
+ *
+ *    dispatches the subcommands of a bson object command
+ *
+ * Results:
+ *    stuff
+ *
+ *----------------------------------------------------------------------
+ */
+int
+mongotcl_appendBsonFromObjects(Tcl_Interp *interp, bson *bson, Tcl_Obj *CONST bsonTypeObj, CONST char *key, Tcl_Obj *CONST valueObj, Tcl_Obj *CONST binaryTypeObj)
+{
+	int typeIndex = 0;
+	int binaryType = 0;
+
+    static CONST char *data_types[] = {
+        "string",
+        "int",
+		"long",
+        "double",
+        "bool",
+        "clock",
+		"null",
+		"undefined",
+		"binary",
+		"bson",
+		NULL
+    };
+
+    enum data_types {
+		OPT_APPEND_STRING,
+		OPT_APPEND_INT,
+		OPT_APPEND_LONG,
+		OPT_APPEND_DOUBLE,
+		OPT_APPEND_BOOL,
+		OPT_APPEND_CLOCK,
+		OPT_APPEND_NULL,
+		OPT_APPEND_UNDEFINED,
+		OPT_APPEND_BINARY,
+		OPT_APPEND_BSON
+    };
+
+	if (Tcl_GetIndexFromObj (interp, bsonTypeObj, data_types, "data_type",
+		TCL_EXACT, &typeIndex) != TCL_OK) {
+		return TCL_ERROR;
+	}
+
+	switch ((enum data_types) typeIndex) {
+		case OPT_APPEND_STRING: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_STRING, 0, key, valueObj);
+		}
+
+		case OPT_APPEND_INT: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_INT, 0, key, valueObj);
+		  }
+
+		case OPT_APPEND_LONG: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_LONG, 0, key, valueObj);
+		  }
+
+		case OPT_APPEND_DOUBLE: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_DOUBLE, 0, key, valueObj);
+		}
+
+		case OPT_APPEND_BOOL: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_BOOL, 0, key, valueObj);
+		}
+
+		case OPT_APPEND_CLOCK: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_DATE, 0, key, valueObj);
+		}
+
+		case OPT_APPEND_NULL: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_NULL, 0, key, NULL);
+	  }
+
+		case OPT_APPEND_UNDEFINED: {
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_UNDEFINED, 0, key, NULL);
+		}
+
+		case OPT_APPEND_BINARY: {
+			unsigned char *binary;
+			int binaryLength;
+			int   suboptIndex;
+			int binaryType;
+
+			static CONST char *subTypes[] = {
+				"generic",
+				"function",
+				"uuid",
+				"md5",
+				"user_defined",
+				NULL
+			};
+
+			enum binary_types {
+				BINARY_TYPE_GENERIC,
+				BINARY_TYPE_FUNCTION,
+				BINARY_TYPE_UUID,
+				BINARY_TYPE_MD5,
+				BINARY_TYPE_USER_DEFINED
+			};
+
+
+			if (Tcl_GetIndexFromObj (interp, binaryTypeObj, subTypes, "binary_type", TCL_EXACT, &suboptIndex) != TCL_OK) {
+				return TCL_ERROR;
+			}
+
+			binary = Tcl_GetByteArrayFromObj (valueObj, &binaryLength);
+
+			switch ((enum binary_types)suboptIndex) {
+				case BINARY_TYPE_GENERIC: {
+					binaryType = BSON_BIN_BINARY;
+					break;
+				}
+
+				case BINARY_TYPE_FUNCTION: {
+					binaryType = BSON_BIN_FUNC;
+					break;
+				}
+
+				case BINARY_TYPE_UUID: {
+					binaryType = BSON_BIN_UUID;
+					break;
+				}
+
+				case BINARY_TYPE_MD5: {
+					binaryType = BSON_BIN_MD5;
+					break;
+				}
+
+				case BINARY_TYPE_USER_DEFINED: {
+					binaryType = BSON_BIN_USER;
+					break;
+				}
+			}
+
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_BINDATA, binaryType, key, valueObj);
+		}
+
+		case OPT_APPEND_BSON: {
+			if (mongotcl_cmdNameObjToBson (interp, valueObj, &bson) == TCL_ERROR) {
+				return TCL_ERROR;
+			}
+
+			return mongotcl_appendBsonFromObject(interp, bson, BSON_OBJECT, binaryType, key, valueObj);
+		}
+	}
+	return TCL_OK;
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * mongotcl_bsonObjectObjCmd --
  *
  *    dispatches the subcommands of a bson object command
@@ -496,6 +790,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 		"new_oid",
 		"to_list",
 		"to_array",
+		"array_set",
 		"finish",
 		"print",
 		NULL
@@ -520,6 +815,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 		OPT_APPEND_NEW_OID,
 		OPT_TO_LIST,
 		OPT_TO_ARRAY,
+		OPT_ARRAY_SET,
         OPT_FINISH,
 		OPT_PRINT
     };
@@ -875,6 +1171,46 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 				}
 
 				return mongotcl_bsontoarray(interp, arrayName, typeArrayName, bd->bson);
+				break;
+			}
+
+			case OPT_ARRAY_SET: {
+				char *typeArrayName;
+				int listObjc;
+				int i;
+				Tcl_Obj **listObjv;
+
+				if (objc < 3 || objc > 4) {
+					Tcl_WrongNumArgs (interp, 1, objv, "array_set kvList ?typeArrayName?");
+					return TCL_ERROR;
+				}
+
+				if (Tcl_ListObjGetElements (interp, objv[2], &listObjc, &listObjv) == TCL_ERROR) {
+					return TCL_ERROR;
+				}
+
+				if (listObjc & 1) {
+					Tcl_SetObjResult (interp, Tcl_NewStringObj ("list must have even number of elements", -1));
+					return TCL_ERROR;
+				}
+
+				for (i = 0; i < listObjc; i += 2) {
+					if (objc == 3) {
+						if (bson_append_string (bd->bson, Tcl_GetString (listObjv[i]), Tcl_GetString (listObjv[i + 1])) != BSON_OK) {
+							return mongotcl_setBsonError (interp, bd->bson);
+						}
+					} else {
+					}
+				}
+
+
+				if (objc == 3) {
+					typeArrayName = NULL;
+				} else {
+					typeArrayName = Tcl_GetString (objv[3]);
+				}
+
+				// return mongotcl_arraytobson(interp, arrayName, typeArrayName, bd->bson);
 				break;
 			}
 
