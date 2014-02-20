@@ -565,11 +565,10 @@ mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, 
 		case BSON_BINDATA: {
 			unsigned char *binary;
 			int binaryLength;
-			int binaryType;
 
 			binary = Tcl_GetByteArrayFromObj (valueObj, &binaryLength);
 
-			if (bson_append_binary (bs, key, binaryType, (char *)binary, binaryLength) != BSON_OK) {
+			if (bson_append_binary (bs, key, bsonBinarySubtype, (char *)binary, binaryLength) != BSON_OK) {
 				return mongotcl_setBsonError (interp, bs);
 			}
 			break;

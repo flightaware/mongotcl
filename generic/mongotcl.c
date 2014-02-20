@@ -476,7 +476,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 				}
 			}
 
-			if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), bsonList, listObjc, md->write_concern, flags) != MONGO_OK) {
+			if (mongo_insert_batch (md->conn, Tcl_GetString(objv[2]), (const bson **)bsonList, listObjc, md->write_concern, flags) != MONGO_OK) {
 				return mongotcl_setMongoError (interp, md->conn);
 			}
 
@@ -653,14 +653,14 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 		}
 
 		case OPT_GET_LAST_ERROR: {
-			bson *out;
+			bson out;
 
 			if (objc != 3) {
 				Tcl_WrongNumArgs (interp, 2, objv, "db");
 				return TCL_ERROR;
 			}
 
-			if (mongo_cmd_get_last_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
+			if (mongo_cmd_get_last_error (md->conn, Tcl_GetString(objv[2]), &out) != MONGO_OK) {
 				return mongotcl_setMongoError (interp, md->conn);
 			}
 
@@ -668,14 +668,14 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 		}
 
 		case OPT_GET_PREV_ERROR: {
-			bson *out;
+			bson out;
 
 			if (objc != 3) {
 				Tcl_WrongNumArgs (interp, 2, objv, "db");
 				return TCL_ERROR;
 			}
 
-			if (mongo_cmd_get_prev_error (md->conn, Tcl_GetString(objv[2]), out) != MONGO_OK) {
+			if (mongo_cmd_get_prev_error (md->conn, Tcl_GetString(objv[2]), &out) != MONGO_OK) {
 				return mongotcl_setMongoError (interp, md->conn);
 			}
 
@@ -941,14 +941,14 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 		}
 
 		case OPT_CMD_DROP_COLLECTION: {
-			bson *out;
+			bson out;
 
 			if (objc != 4) {
 				Tcl_WrongNumArgs (interp, 2, objv, "db collect");
 				return TCL_ERROR;
 			}
 
-			if (mongo_cmd_drop_collection (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), out) != MONGO_OK) {
+			if (mongo_cmd_drop_collection (md->conn, Tcl_GetString(objv[2]), Tcl_GetString(objv[3]), &out) != MONGO_OK) {
 				return mongotcl_setMongoError (interp, md->conn);
 			}
 			break;

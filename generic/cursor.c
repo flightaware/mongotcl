@@ -155,7 +155,7 @@ mongotcl_tcllist_to_cursor_fields (Tcl_Interp *interp, Tcl_Obj *fieldList, mongo
 		return TCL_ERROR;
 	}
 
-	if (i & 1) {
+	if (listObjc & 1) {
 		Tcl_SetObjResult (interp, Tcl_NewStringObj ("field list must have even number of elements", -1));
 		return TCL_ERROR;
 	}
@@ -318,7 +318,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 
 		case OPT_CURSOR_SET_OPTIONS: {
 			int listObjc;
-			int cursorFlags;
+			int cursorFlags = 0;
 			int i;
 			Tcl_Obj **listObjv;
 
