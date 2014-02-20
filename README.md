@@ -42,18 +42,18 @@ MongoTcl provides three object creation commands...
 BSON object
 ---
 
-BSON stands for Binary JSON, is a binary-encoded serialization of JSON-like documents.  It has a JSON-like structure but is extended to support data types beyond the JSON spec, like it has a binary data type.
+BSON stands for Binary JSON, is a binary-encoded serialization of JSON-like documents.  It has a JSON-like structure but is extended to support data types beyond the JSON spec, like it has several binary data types.
 
-It's intended to be lightweight, traversable and efficient and it's the primary data representation for MongoDB.
+BSON is intended to be lightweight, traversable and efficient and it's the primary data representation for MongoDB.
 
 More about bson at http://bsonspec.org/
 
-MongoDB use of BSON at http://docs.mongodb.org/meta-driver/latest/legacy/bson/
+More on MongoDB's use of BSON at http://docs.mongodb.org/meta-driver/latest/legacy/bson/
 
 MongoTcl has a bson object and the bson creator is invoked to create bson objects, simiarly to iTcl objects
 
 ```tcl
-    ::mongo::bson create
+    ::mongo::bson create name
 ```
 
 or
@@ -75,11 +75,15 @@ Append a key and value to the bson object.
 
 * $bson int $key $value
 
-Append a key and value to the bson object where the value is a number.
+Append a key and value to the bson object where the value is an integer.
+
+* $bson long $key $value
+
+Append a key and value to the bson object where the value is a long.
 
 * $bson double $key $value
 
-Append a key and value to the bson object where the value is a double-precision floating point.
+Append a key and value to the bson object where the value is a double-precision floating point value.
 
 * $bson bool $key $value
 
@@ -87,7 +91,7 @@ Append a key and a boolean value to the bson object.
 
 * $bson clock $key $epoch
 
-Append a key and epoch to the bson object.  Stored in milliseconds but program multiplies by 100.  Probably shouldn't and you should use clock clicks -milliseconds for current time.
+Append a key and epoch to the bson object.  Stored in milliseconds but program multiplies by 1000.  Probably shouldn't and you should use clock clicks -milliseconds for current time.
 
 * $bson null $key
 
@@ -126,17 +130,11 @@ Example usage
 	$bson array_set [array get row] typeArray
 ```
 
-* $bson binary key type $binaryData
+* $bson binary type key $binaryData
 
 Append a key and binary data.  Type can be ''generic'', ''function'', ''uuid'', ''md5'', ''user_defined''.
 
-Typical usage
-
-```tcl
-    $bson kvlist [array get arrayName]
-```
-
-List must be contain an even number of elements.
+Keys and values being appended can be expressed in a single statement.
 
 * $bson bson key bsonObject
 
@@ -186,14 +184,30 @@ Delete the bson object.
 
 Print is for debugging only, it sort of shows you what's in the bson object.
 
-All of the methods can be combined in a single command, for example:
+Most of the methods can be combined in a single command, for example:
 
 ```tcl
 $bson init string "name" "Joe" int "age" 33 finish
 ```
 
+Example usage
 
-Methods of mongo, the MongoDB interface object
+* Storing binary data read from a file into a bson object:
+
+```tcl
+	set bson [::mongo::bson #auto]
+	$bson init
+    $bson array_set [array get arrayName]
+	set fp [open $file]
+	fconfigure $fp -translation binary -encoding binary
+	$bson generic png_data [read $fp]
+	close $fp
+	$bson finish
+```
+
+The ''to_array'' approach doesn't provide all of the capabilities for composing bson on its own, but it is easy to use while providing high performance.
+
+Methods of mongo, the MongoDB database interface object
 ---
 
 ```tcl
@@ -214,7 +228,7 @@ Update the specified bson object.  condBson is the update query in bson.  opBson
 
 * $mongo insert_batch $namespace $bsonObjectList
 
-There's a compile warning on this.  It's probably coredump.
+Theoretically this will insert a list of bson objects in the specified namespace (a namespace like '''tutorial.persons''') and have higher performance than calling it one row at a time.
 
 * $mongo remove $namespace $bson
 
@@ -223,6 +237,10 @@ Removes a document from a MongoDB server.  bson is the bson query.
 * $mongo cursor name namespace
 
 Create a cursor for this MongoDB connection.  Name is the name of the object created.  If name is #auto, a unique name will be automatically generated and returned.
+
+Cursor methods can then be invoked to move through the query results (or all rows, whatever).  
+
+It is expected that people will mainly use the ''search'' composite method defined in ''mongo.tcl'' and documented below.
 
 * $mongo find $namespace $bsonQuery $bsonFields $limit $skip $options
 
@@ -240,9 +258,13 @@ Return the previous error.
 
 * $mongo write_concern concern_option ?concern_option?
 
-The write_concern method takes one or more options.  ''ignore_errors'' says to ignore errors.  ''unacknowledged'', the default, says to write unacknowledged, which ''acknowledged'' says to write acknowledged.
+The write_concern method takes one or more options.  ''ignore_errors'' says to ignore errors. Webpages at http://docs.mongodb.org/manual/core/write-concern/ warn not to use the write concern that ignores errors in normal operation.
 
-In addition to the above options, which are one-of-three, ''replica_acknowledged'' adds that I guess a quorm of replicas have acknowledged the write, and ''journaled'' requires it to have been written to disk before the call returns.
+''unacknowledged'', the default, says to write unacknowledged, while ''acknowledged'' says to write acknowledged.  Acknowledged causes mongod to confirm the receipt of the write operation.  This write concern allows clients to catch errors such as network, duplicate key, and others.
+
+In addition to the above options, which are one-of-three, 
+''journaled'' requires the data to have been committed to the journal before returning.
+''replica_acknowledged'' requires the write to have propagated to the members of a replica set before returning.
 
 * $mongo create_index $namespace $keyBson $outBson ?optionList?
 
@@ -309,19 +331,27 @@ Delete the mongo object.  Can also be done by doing a
 Cursor Methods
 ---
 
+* $mongo cursor name namespace
+
+Createa a mongo cursor object named ''name'' that will access the requested namespace.
+
+```tcl
+	set cursor [$mongo cursor #auto daystream.controlstream]
+```
+
 * $cursor init $namespace
 
 Initialize or reinitialize a cursor.
 
 * $cursor next
 
-Move the cursor to the next row.  Returns true if there is a next row, false if the cursor is exhausted.  
+Move the cursor to the next row.  Returns true if there is a next row, false if the cursor is exhausted.  You have to use ''next'' to get to the first row.
 
 Any error condition (CURSOR_INVALID, CURSOR_PENDING, CURSOR_QUERY_FAIL, CURSOR_BSON_ERROR), it generates a Tcl error and sets the error code to a list consisting of MONGO and the aforementioned condition code.
 
 * $cursor to_list
 
-Return the bson object of the current row as a list.
+Return the bson object of the current row as a list of datatypes, keys and usually, values.
 
 * $cursor to_array arrayName ?typeArrayName?
 
@@ -345,11 +375,11 @@ optonList contains a list zero or more elements:
 
 ** tailable
 
-Cursor is tailable.
+Cursor is tailable.  This keeps the query open and returns new rows as they are added to the namespace.
 
 ** slave_ok
 
-Queries are allowed on non-primary nodes.
+Queries are allowed on non-primary nodes.  This probably means the data you get may be a little stale.
 
 ** no_timeout
 
@@ -369,7 +399,7 @@ Allow reads even if a shard is down.
 
 * $cursor set_fields fieldList
 
-Set what fields are returned.  fieldList is a list of field names with 1 or 0.  1 says to include the field, 0 says to exclude it.  The fieldList is sticky for future queries.  This may change.  See http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/ for how the 1/0 thing works.
+Set what fields are to be returned.  It's useful not to pull fields you don't need, obviously.  fieldList is a list of field names with 1 or 0.  1 says to include the field, 0 says to exclude it.  The fieldList is sticky for future queries.  This may change.  See http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/ for how the 1/0 thing works.
 
 * $cursor delete
 
@@ -382,7 +412,7 @@ Search
 
 Create a cursor against the specified namespace.  
 
-* If -fields is present, fieldList is a list of fieldNames.  Fields returned are restricted to the named fields.  If a field name starts with a dash it indicates that that field is to be explicitly suppressed.
+* If -fields is present, fieldList is a list of fieldNames.  Fields returned are restricted to the named fields.  If a field name starts with a dash it indicates that that field is to be explicitly suppressed. "-_id" might be a fairly common usage if you don't need the oid.
 
 * If -array is present, arrayName is the name of an array set in the caller's context containing elements for the fields of each row returned.
 
@@ -436,23 +466,10 @@ When you're done using the mongodb object, destroy it similarly.
 
 The bson result object can be examined for the status.
 
-To build the same index in the bacground, append the '''background''' option to the command:
+To build the same index in the background, append the '''background''' option to the command:
 
 ```tcl
 	$mongo create_index daystream.controlstream $keyBson $bsonResult background
-```
-
-* search
-
-This is a little gross and is going to be simplified, but...
-
-```tcl
-
-	set cursor [$mongo cursor #auto daystream.controlstream]
-
-	$cursor next
-
-	$cursor to_list
 ```
 
 * Perform a complex query
@@ -463,6 +480,11 @@ This is a little gross and is going to be simplified, but...
 
 	$cursor init $namespace
 	$cursor set_query $query
+
+	while {[$cursor next]} {
+		unset -nocomplain row
+		$cursor to_array row
+	}
 ```
 
 Bugs
@@ -471,3 +493,4 @@ Bugs
 The code is currently early beta quality so there could be quite a few bugs including ones that trigger a coredump.
 
 There are almost for sure some memory leaks so until those are all tracked down expect long-running jobs' memory footprint to grow and plan accordingly.
+
