@@ -201,6 +201,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
         "add_user",
         "drop_collection",
         "drop_db",
+		"delete",
         NULL
     };
 
@@ -233,6 +234,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 		OPT_CMD_ADD_USER,
 		OPT_CMD_DROP_COLLECTION,
 		OPT_CMD_DROP_DB,
+		OPT_DELETE
     };
 
     /* basic validation of command line arguments */
@@ -963,6 +965,11 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 			if (mongo_cmd_drop_db (md->conn, Tcl_GetString(objv[2])) != MONGO_OK) {
 				return mongotcl_setMongoError (interp, md->conn);
 			}
+			break;
+		}
+
+		case OPT_DELETE: {
+			Tcl_DeleteCommandFromToken (interp, md->cmdToken);
 			break;
 		}
     }

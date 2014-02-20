@@ -833,6 +833,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 		"to_array",
 		"array_set",
 		"finish",
+		"delete",
 		"print",
 		NULL
     };
@@ -858,6 +859,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 		OPT_TO_ARRAY,
 		OPT_ARRAY_SET,
         OPT_FINISH,
+		OPT_DELETE,
 		OPT_PRINT
     };
 
@@ -1238,7 +1240,13 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 					return mongotcl_setBsonError (interp, bd->bson);
 				}
 				break;
-			  }
+			}
+
+			case OPT_DELETE: {
+				Tcl_DeleteCommandFromToken (interp, bd->cmdToken);
+				break;
+			}
+
 
 		  case OPT_PRINT: {
 				bson_print (bd->bson);

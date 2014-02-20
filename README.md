@@ -3,9 +3,14 @@ MongoTcl, a Tcl C extension providing a Tcl interface to the MongoDB database
 
 MongoTcl provides a Tcl interface to the MongoDB C API.
 
-FA Note
+License
 ---
-If pursued far enough, when this is solid enough it will be open sourced.
+
+Open source under the permissive Berkeley copyright, see file LICENSE
+
+Requirements
+---
+Requires the MongoDB C driver to be installed.  Currently builds against version 0.8.1.
 
 Building
 ---
@@ -45,7 +50,7 @@ More about bson at http://bsonspec.org/
 
 MongoDB use of BSON at http://docs.mongodb.org/meta-driver/latest/legacy/bson/
 
-MongoTcl has a bson object and the bson creator is invoked to create bson objects, siilarly to iTcl objects
+MongoTcl has a bson object and the bson creator is invoked to create bson objects, simiarly to iTcl objects
 
 ```tcl
     ::mongo::bson create
@@ -173,6 +178,10 @@ Enumerate bson object as an array of key-value pairs.  Embedded bson arrays and 
 
 if typeArrayName is specified, for each key of the key-value pairs, an element is inserted into typeArray for the same key with the value being the name of the bson datatype such as int, double, string, oid, etc.
 
+* $bson delete
+
+Delete the bson object.
+
 * $bson print
 
 Print is for debugging only, it sort of shows you what's in the bson object.
@@ -289,6 +298,14 @@ Drop a collection.
 
 Drop a database.
 
+* $mongo delete
+
+Delete the mongo object.  Can also be done by doing a
+
+```tcl
+	rename $mongo ""
+```
+
 Cursor Methods
 ---
 
@@ -354,6 +371,9 @@ Allow reads even if a shard is down.
 
 Set what fields are returned.  fieldList is a list of field names with 1 or 0.  1 says to include the field, 0 says to exclude it.  The fieldList is sticky for future queries.  This may change.  See http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/ for how the 1/0 thing works.
 
+* $cursor delete
+
+Delete the cursor object.
 
 Search
 ---
@@ -393,6 +413,11 @@ Example
 ```
 
 When you're done using the bson object, destroy it by doing a
+
+```tcl
+    $bson delete
+```
+or, if you prefer...
 
 ```tcl
     rename $bson ""

@@ -218,6 +218,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
         "set_limit",
 		"set_options",
 		"data",
+		"delete",
         NULL
     };
 
@@ -231,7 +232,8 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
         OPT_CURSOR_SET_SKIP,
         OPT_CURSOR_SET_LIMIT,
         OPT_CURSOR_SET_OPTIONS,
-        OPT_CURSOR_DATA
+        OPT_CURSOR_DATA,
+		OPT_CURSOR_DELETE
     };
 
     /* basic validation of command line arguments */
@@ -440,6 +442,11 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 					return mongotcl_setCursorError (interp, mc->cursor);
 				}
 			}
+			break;
+		}
+
+		case OPT_CURSOR_DELETE: {
+			Tcl_DeleteCommandFromToken (interp, mc->cmdToken);
 			break;
 		}
     }
