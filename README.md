@@ -270,6 +270,12 @@ In addition to the above options, which are one-of-three,
 
 Create an index.  This can easily done from some CLI that comes with MongoDB, anyway.
 
+The option list contains zero or more instances of the following keywords:
+    * unique - reject documents that contain a duplicate value for the indexed field.
+    * drop_dups - indexing will fail if you ask for a unique index on a field that already has duplicate values.  This option will index the first occurrence of a value for the key and delete all subsequent values.
+    * sparse - make the index only contain entries for documents that contain the indexed field, i.e. if the field is null for a document then the document doesn't appear in the index if this option is specified.
+    * background - During index creation the database holding the collection is unavailable for read or write operations by default.  If the background option is set then indexing will run in the background, allowing other database operations to run while the index is being created.
+
 * $mongo set_op_timeout $ms
 
 Set operation timeout in milliseconds.
