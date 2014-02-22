@@ -535,6 +535,7 @@ mongotcl_mongoObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_O
 				"tailable",
 				"slave_ok",
 				"no_timeout",
+				"await_data",
 				"exhaust",
 				"partial",
 				NULL

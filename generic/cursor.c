@@ -328,6 +328,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 				"tailable",
 				"slave_ok",
 				"no_timeout",
+				"await_data",
 				"exhaust",
 				"partial",
 				NULL
