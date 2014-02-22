@@ -1055,7 +1055,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 				int   suboptIndex;
 				int binaryType;
 
-				static CONST char *subTypes[] = {
+				static CONST char *binaryTypes[] = {
 					"generic",
 					"function",
 					"uuid",
@@ -1074,11 +1074,11 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 
 
 				if (arg + 3 >= objc) {
-					Tcl_WrongNumArgs (interp, 1, objv, "binary key type value");
+					Tcl_WrongNumArgs (interp, 1, objv, "binaryType key binaryData");
 					return TCL_ERROR;
 				}
 
-				if (Tcl_GetIndexFromObj (interp, objv[++arg], subTypes, "subtype", TCL_EXACT, &suboptIndex) != TCL_OK) {
+				if (Tcl_GetIndexFromObj (interp, objv[++arg], binaryTypes, "binary_type", TCL_EXACT, &suboptIndex) != TCL_OK) {
 					return TCL_ERROR;
 				}
 
