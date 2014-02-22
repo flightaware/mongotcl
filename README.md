@@ -85,7 +85,7 @@ Append a key and value to the bson object where the value is a double-precision 
 
 Append a key and a boolean value to the bson object.
 
-* $bson clock $key $epoch
+* $bson date $key $epoch
 
 Append a key and epoch to the bson object.  Stored in milliseconds but program multiplies by 100.  Probably shouldn't and you should use clock clicks -milliseconds for current time.
 

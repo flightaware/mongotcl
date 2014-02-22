@@ -624,7 +624,7 @@ mongotcl_appendBsonFromObjects(Tcl_Interp *interp, bson *bson, Tcl_Obj *CONST bs
 		"long",
         "double",
         "bool",
-        "clock",
+		"date",
 		"null",
 		"undefined",
 		"binary_generic",
@@ -642,7 +642,7 @@ mongotcl_appendBsonFromObjects(Tcl_Interp *interp, bson *bson, Tcl_Obj *CONST bs
 		OPT_APPEND_LONG,
 		OPT_APPEND_DOUBLE,
 		OPT_APPEND_BOOL,
-		OPT_APPEND_CLOCK,
+		OPT_APPEND_DATE,
 		OPT_APPEND_NULL,
 		OPT_APPEND_UNDEFINED,
 		OPT_APPEND_BINARY_GENERIC,
@@ -679,7 +679,7 @@ mongotcl_appendBsonFromObjects(Tcl_Interp *interp, bson *bson, Tcl_Obj *CONST bs
 			return mongotcl_appendBsonFromObject(interp, bson, BSON_BOOL, 0, key, valueObj);
 		}
 
-		case OPT_APPEND_CLOCK: {
+		case OPT_APPEND_DATE: {
 			return mongotcl_appendBsonFromObject(interp, bson, BSON_DATE, 0, key, valueObj);
 		}
 
