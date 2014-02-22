@@ -268,7 +268,7 @@ mongotcl_cursorObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_
 				return TCL_ERROR;
 			}
 
-			if (mongotcl_cmdNameObjToBson (interp, objv[3], &bson) == TCL_ERROR) {
+			if (mongotcl_cmdNameObjToBson (interp, objv[2], &bson) == TCL_ERROR) {
 				return TCL_ERROR;
 			}
 
