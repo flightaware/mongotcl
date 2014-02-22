@@ -114,7 +114,7 @@ specifies the bson data type to be encoded, from the following list:
 * long
 * double
 * bool
-* clock
+* date
 * null
 * undefined
 * binary_generic

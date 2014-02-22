@@ -818,7 +818,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         "int",
         "double",
         "bool",
-        "clock",
+        "date",
 		"null",
 		"undefined",
 		"kvlist",
@@ -844,7 +844,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
         OPT_APPEND_INT,
         OPT_APPEND_DOUBLE,
         OPT_APPEND_BOOL,
-        OPT_APPEND_CLOCK,
+        OPT_APPEND_DATE,
         OPT_APPEND_NULL,
         OPT_APPEND_UNDEFINED,
 		OPT_APPEND_KVLIST,
@@ -966,7 +966,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 				break;
 			}
 
-			case OPT_APPEND_CLOCK: {
+			case OPT_APPEND_DATE: {
 				long clock;
 				char *key;
 
