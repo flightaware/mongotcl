@@ -877,6 +877,7 @@ mongotcl_bsonObjectObjCmd(ClientData cData, Tcl_Interp *interp, int objc, Tcl_Ob
 
 		switch ((enum options) optIndex) {
 			case OPT_INIT: {
+				bson_destroy (bd->bson);
 				bson_init (bd->bson);
 				break;
 			}
