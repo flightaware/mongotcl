@@ -500,3 +500,6 @@ The code is currently early beta quality so there could be quite a few bugs incl
 
 There are almost for sure some memory leaks so until those are all tracked down expect long-running jobs' memory footprint to grow and plan accordingly.
 
+Update: We have now inserted hundreds of millions of rows without appreciable client memory footprint growth, so that process seems pretty solid.
+
+

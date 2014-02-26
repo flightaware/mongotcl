@@ -488,6 +488,12 @@ mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, 
 			int num;
 
 			if (Tcl_GetIntFromObj (interp, valueObj, &num) == TCL_ERROR) {
+
+			  conversion_error:
+				Tcl_AddErrorInfo(interp, " while processing field '");
+				Tcl_AddErrorInfo(interp, key);
+				Tcl_AddErrorInfo(interp, "'");
+
 				return TCL_ERROR;
 			}
 
@@ -501,7 +507,7 @@ mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, 
 			long num;
 
 			if (Tcl_GetLongFromObj (interp, valueObj, &num) == TCL_ERROR) {
-				return TCL_ERROR;
+				goto conversion_error;
 			}
 
 			if (bson_append_long (bs, key, num) != BSON_OK) {
@@ -514,7 +520,7 @@ mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, 
 			double num;
 
 			if (Tcl_GetDoubleFromObj (interp, valueObj, &num) == TCL_ERROR) {
-				return TCL_ERROR;
+				goto conversion_error;
 			}
 
 			if (bson_append_double (bs, key, num) != BSON_OK) {
@@ -527,7 +533,7 @@ mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, 
 			int bool;
 
 			if (Tcl_GetBooleanFromObj (interp, valueObj, &bool) == TCL_ERROR) {
-				return TCL_ERROR;
+				goto conversion_error;
 			}
 
 			if (bson_append_bool (bs, key, bool) != BSON_OK) {
@@ -538,8 +544,9 @@ mongotcl_appendBsonFromObject(Tcl_Interp *interp, bson *bs, bson_type bsonType, 
 
 		case BSON_DATE: {
 			long clock;
+
 			if (Tcl_GetLongFromObj (interp, valueObj, &clock) == TCL_ERROR) {
-				return TCL_ERROR;
+				goto conversion_error;
 			}
 
 			if (bson_append_time_t (bs, key, (time_t)clock) != BSON_OK) {
